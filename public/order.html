@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>สั่งซื้อสินค้า - โรงสีชุมชน</title>
+    <link rel="stylesheet" href="/css/output.css">
+    <style>
+        .product-list-item {
+            display: flex;
+            gap: 1.5rem;
+            padding: 1.5rem;
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1rem;
+            transition: box-shadow 0.3s;
+        }
+        
+        .product-list-item:hover {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .product-image {
+            flex-shrink: 0;
+            width: 160px;
+            height: 160px;
+            background: #f3f4f6;
+            border-radius: 0.5rem;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .product-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .product-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        
+        .product-header {
+            margin-bottom: 0.5rem;
+        }
+        
+        .product-name {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #2d5016;
+            margin-bottom: 0.25rem;
+        }
+        
+        .product-description {
+            font-size: 0.875rem;
+            color: #666;
+            margin-bottom: 0.5rem;
+        }
+        
+        .product-meta {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 1rem;
+            font-size: 0.875rem;
+        }
+        
+        .product-meta-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        
+        .product-meta-label {
+            color: #999;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+        }
+        
+        .product-meta-value {
+            color: #333;
+            font-weight: 600;
+        }
+        
+        .product-price {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: #2d5016;
+        }
+        
+        .product-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .quantity-selector {
+            display: flex;
+            align-items: center;
+            border: 1px solid #ddd;
+            border-radius: 0.375rem;
+            overflow: hidden;
+        }
+        
+        .quantity-btn {
+            padding: 0.25rem 0.5rem;
+            background: #f3f4f6;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            color: #666;
+            width: 2.5rem;
+            height: 2.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .quantity-btn:hover {
+            background: #e5e7eb;
+        }
+        
+        .quantity-input {
+            width: 3rem;
+            border: none;
+            text-align: center;
+            font-weight: 600;
+            padding: 0;
+        }
+        
+        .add-to-cart-btn {
+            padding: 0.75rem 1.5rem;
+            background: #2d5016;
+            color: white;
+            border: none;
+            border-radius: 0.375rem;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background 0.3s;
+        }
+        
+        .add-to-cart-btn:hover {
+            background: #1f3609;
+        }
+        
+        .add-to-cart-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .category-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            border-bottom: 2px solid #e5e7eb;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+        }
+        
+        .category-tab {
+            padding: 0.75rem 1.5rem;
+            background: transparent;
+            border: none;
+            font-weight: 600;
+            color: #999;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            white-space: nowrap;
+            transition: all 0.3s;
+        }
+        
+        .category-tab:hover {
+            color: #2d5016;
+        }
+        
+        .category-tab.active {
+            color: #2d5016;
+            border-bottom-color: #2d5016;
+        }
+        
+        .search-bar {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .page-header-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .bottom-cart-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+        
+        .search-bar input {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: 1px solid #ddd;
+            border-radius: 0.375rem;
+            font-size: 1rem;
+        }
+        
+        .search-bar button {
+            padding: 0.75rem 1.5rem;
+            background: #2d5016;
+            color: white;
+            border: none;
+            border-radius: 0.375rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .mill-filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+            min-width: 0;
+        }
+
+        .mill-filter-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.5rem;
+            min-width: 0;
+        }
+
+        .mill-filter-option {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.55rem;
+            padding: 0.65rem 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.6rem;
+            background: white;
+            cursor: pointer;
+            user-select: none;
+            min-width: 0;
+        }
+
+        .mill-filter-option input {
+            margin-top: 0.15rem;
+            flex-shrink: 0;
+        }
+
+        .mill-filter-option span {
+            line-height: 1.25;
+            word-break: break-word;
+        }
+
+        .mill-filter-option.is-selected {
+            border-color: #2d5016;
+            background: #f6f9f0;
+            box-shadow: 0 0 0 1px rgba(45, 80, 22, 0.12) inset;
+        }
+
+        .mill-filter-summary {
+            font-size: 0.75rem;
+            color: #6b7280;
+            line-height: 1.2;
+        }
+        
+        .products-container {
+            margin-bottom: 2rem;
+        }
+        
+        .no-products {
+            text-align: center;
+            padding: 2rem;
+            color: #999;
+        }
+        
+        .cart-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 2rem;
+            height: 2rem;
+            background: #2d5016;
+            color: white;
+            border-radius: 50%;
+            font-weight: bold;
+            font-size: 0.875rem;
+        }
+        
+        .cart-button-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-top: 2px solid #e5e7eb;
+            padding: 1rem;
+            z-index: 40;
+        }
+        
+        .container-custom {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+        
+        @media (max-width: 768px) {
+            .page-header-row {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .search-bar {
+                flex-direction: column;
+                align-items: stretch !important;
+            }
+
+            .mill-filter-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .product-list-item {
+                flex-direction: column;
+            }
+            
+            .product-image {
+                width: 100%;
+                max-width: 300px;
+            }
+            
+            .product-actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .add-to-cart-btn {
+                width: 100%;
+            }
+
+            .bottom-cart-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .bottom-cart-row a {
+                width: 100%;
+                text-align: center;
+            }
+        }
+
+        @media (min-width: 768px) {
+            .mill-filter-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+        }
+    </style>
+</head>
+<body class="text-gray-800 pb-24">
+    <!-- Header & Navigation -->
+    <header class="sticky top-0 z-40 bg-white shadow-subtle">
+        <nav class="container-custom py-4 flex items-center justify-between">
+            <a href="/" class="flex items-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-field-600">
+                <span class="text-xl md:text-2xl font-bold text-field-700">โรงสีชุมชน</span>
+            </a>
+            <ul class="hidden md:flex gap-8 items-center">
+                <li><a href="/" class="text-gray-700 hover:text-field-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-field-600">หน้าแรก</a></li>
+                <li><a href="/inquiry.html" class="text-gray-700 hover:text-field-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-field-600">สอบถาม</a></li>
+                <li><a href="/contact.html" class="text-gray-700 hover:text-field-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-field-600">ติดต่อ</a></li>
+                <li><a href="/login.html" class="text-field-700 font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-field-600">เจ้าของโรงสี</a></li>
+            </ul>
+
+            <button id="mobile-menu-btn" class="md:hidden p-2 hover:bg-gray-100 rounded-lg" aria-label="เปิดเมนูมือถือ" aria-expanded="false">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+            </button>
+        </nav>
+
+        <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-gray-100">
+            <ul class="container-custom py-4 space-y-2">
+                <li><a href="/" class="block py-2 text-gray-700 hover:text-field-700">หน้าแรก</a></li>
+                <li><a href="/inquiry.html" class="block py-2 text-gray-700 hover:text-field-700">สอบถาม</a></li>
+                <li><a href="/contact.html" class="block py-2 text-gray-700 hover:text-field-700">ติดต่อ</a></li>
+                <li><a href="/login.html" class="block py-2 text-field-700 font-semibold">เจ้าของโรงสี</a></li>
+            </ul>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container-custom py-12">
+        <div class="page-header-row mb-8">
+            <div>
+                <h1 class="text-3xl md:text-4xl font-bold text-field-700 mb-2">สินค้าจากโรงสีชุมชน</h1>
+                <p class="text-gray-600">เลือกผลิตภัณฑ์ข้าวคุณภาพสูงจากโรงสีชุมชน พร้อมมีช่องค้นหาสินค้า</p>
+            </div>
+            <a href="/cart.html" class="flex items-center gap-2 text-field-700 font-semibold hover:text-field-800">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2 9m10 0l2 9m-11-9h12M9 20a1 1 0 11-2 0 1 1 0 012 0zm8 0a1 1 0 11-2 0 1 1 0 012 0z"></path>
+                </svg>
+                <span>ตะกร้า</span>
+                <span id="cart-count" class="cart-badge">0</span>
+            </a>
+        </div>
+
+        <!-- Search Bar -->
+                <div class="search-bar" style="align-items: flex-start; gap:1rem;">
+                        <input type="text" id="search-input" placeholder="ค้นหาสินค้า..." class="search-input">
+                        <button onclick="searchProducts()" class="search-btn">ค้นหา</button>
+                        <div class="mill-filter-group">
+                            <label for="mill-filter" style="font-size:0.75rem;color:#6b7280;">กรองตามโรงสี</label>
+                            <div id="mill-filter" class="mill-filter-grid" role="group" aria-label="กรองตามโรงสี"></div>
+                            <div id="mill-filter-summary" class="mill-filter-summary">แสดงทุกโรงสี</div>
+                        </div>
+                </div>
+
+        <!-- Category Tabs -->
+        <div id="category-tabs-container" class="category-tabs">
+            <button class="category-tab active" data-category="all" onclick="selectCategory('all')">
+                ทั้งหมด
+            </button>
+        </div>
+
+        <!-- Products Container -->
+        <div id="products-container" class="products-container">
+            <div class="no-products">กำลังโหลดสินค้า...</div>
+        </div>
+    </main>
+
+    <!-- Cart Button at Bottom -->
+    <div class="cart-button-container">
+        <div class="container-custom">
+            <div class="bottom-cart-row">
+                <div class="text-field-700 font-semibold">
+                    รวมราคา: <span id="total-price" class="text-xl">฿0.00</span>
+                </div>
+                <a href="/cart.html" class="px-8 py-3 bg-field-600 text-white rounded-lg font-semibold hover:bg-field-700 transition inline-block">
+                    ดูตะกร้าสินค้า (<span id="cart-count-bottom">0</span>)
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-gray-100 mt-16">
+        <div class="container-custom py-12">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+                <div>
+                    <h3 class="text-xl font-bold text-field-400 mb-4">โรงสีชุมชน</h3>
+                    <p class="text-sm text-gray-400">บริการสีข้าวคุณภาพ มาตรฐานและเชื่อถือได้ ใส่ใจความพึงพอใจของลูกค้า</p>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold text-white mb-4">ลิงก์ด่วน</h4>
+                    <ul class="text-sm text-gray-400 space-y-2">
+                        <li><a href="/" class="hover:text-field-400">หน้าแรก</a></li>
+                        <li><a href="/milling.html" class="hover:text-field-400">ขอสีข้าว</a></li>
+                        <li><a href="/order.html" class="hover:text-field-400">สั่งซื้อสินค้า</a></li>
+                        <li><a href="/contact.html" class="hover:text-field-400">ติดต่อ</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold text-white mb-4">ติดต่อเรา</h4>
+                    <p class="text-sm text-gray-400 mb-2">
+                        <strong>เบอร์โทร:</strong>
+                        <a href="tel:+66812345678" class="hover:text-field-400">085-881-4530</a>
+                    </p>
+                    <p class="text-sm text-gray-400">
+                        <strong>อีเมล:</strong>
+                        <a href="mailto:contact@ricemillsite.com" class="hover:text-field-400">contact@ricemillsite.com</a>
+                    </p>
+                </div>
+            </div>
+            <hr class="border-gray-700 my-8">
+            <p class="text-center text-sm text-gray-400">© 2025 โรงสีชุมชน สงวนลิขสิทธิ์</p>
+        </div>
+    </footer>
+
+    <script src="/js/main.js"></script>
+    <script src="/js/shopping-cart.js"></script>
+</body>
+</html>

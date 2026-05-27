@@ -1,0 +1,119 @@
+{
+  "common": {
+    "appName": "Community Rice Mill",
+    "logo": "Community Rice Mill Logo",
+    "tagline": "Premium rice milling service. Every grain matters.",
+    "back": "Back",
+    "close": "Close",
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "success": "Success",
+    "cancel": "Cancel"
+  },
+  "nav": {
+    "home": "Home",
+    "riceTypes": "Rice Types",
+    "inquiry": "Inquiry",
+    "contact": "Contact Us",
+    "currentPage": "Current page:"
+  },
+  "home": {
+    "title": "Home",
+    "ctaBrowse": "Browse Mills",
+    "millsNearby": "Our Rice Mills",
+    "viewMore": "View More",
+    "location": "Location",
+    "phone": "Phone",
+    "hours": "Hours",
+    "openTime": "Open",
+    "closeTime": "Close"
+  },
+  "riceTypes": {
+    "title": "Milling Request",
+    "subtitle": "Submit your rice milling request",
+    "riceTypeLabel": "Select Rice Type",
+    "riceType": {
+      "white": "White Rice",
+      "brown": "Brown Rice",
+      "sticky": "Sticky Rice"
+    },
+    "customerName": "Full Name",
+    "customerNamePlaceholder": "Enter your first and last name",
+    "phoneLabel": "Phone Number",
+    "phonePlaceholder": "e.g., 081-234-5678",
+    "sacksLabel": "Number of Sacks",
+    "sacksPlaceholder": "e.g., 10",
+    "dateLabel": "Dropoff Date",
+    "datePlaceholder": "DD/MM/YYYY",
+    "submit": "Submit Request",
+    "submitting": "Submitting...",
+    "successMessage": "Your milling request has been submitted successfully!",
+    "errorMessage": "Failed to submit request. Please try again.",
+    "validation": {
+      "nameRequired": "Name is required",
+      "phoneRequired": "Phone number is required",
+      "phoneInvalid": "Phone number must be 9-10 digits",
+      "sacksRequired": "Number of sacks is required",
+      "sacksInvalid": "Must be a positive number",
+      "dateRequired": "Dropoff date is required",
+      "dateInvalid": "Date must be today or in the future",
+      "riceTypeRequired": "Please select a rice type"
+    }
+  },
+  "inquiry": {
+    "title": "Inquiry",
+    "subtitle": "Ask us a question",
+    "subject": "Subject",
+    "subjectPlaceholder": "e.g., Pricing inquiry",
+    "message": "Message",
+    "messagePlaceholder": "Please provide details about your inquiry...",
+    "customerName": "Full Name",
+    "customerNamePlaceholder": "Enter your first and last name",
+    "phone": "Phone Number",
+    "phonePlaceholder": "e.g., 081-234-5678",
+    "submit": "Send Inquiry",
+    "submitting": "Sending...",
+    "successMessage": "Your inquiry has been sent successfully!",
+    "errorMessage": "Failed to send inquiry. Please try again.",
+    "socialLinks": "Connect with us",
+    "validation": {
+      "subjectRequired": "Subject is required",
+      "messageRequired": "Message is required",
+      "nameRequired": "Name is required",
+      "phoneRequired": "Phone number is required",
+      "phoneInvalid": "Phone number must be 9-10 digits"
+    }
+  },
+  "millDetail": {
+    "title": "Mill Details",
+    "openInMaps": "Open in Maps",
+    "requestMilling": "Request Milling Here",
+    "askQuestion": "Ask Question",
+    "location": "Location",
+    "phone": "Phone",
+    "callNow": "Call Now",
+    "hours": "Operating Hours",
+    "to": "to",
+    "serviceArea": "Service Area"
+  },
+  "contact": {
+    "title": "Contact Us",
+    "subtitle": "Get in touch with us",
+    "channels": "Contact Channels",
+    "mainLocation": "Main Location",
+    "phone": "Phone",
+    "email": "Email",
+    "line": "LINE",
+    "facebook": "Facebook Messenger",
+    "visitMap": "Visit Location",
+    "callDirect": "Call Us",
+    "emailUs": "Email Us",
+    "messageOnLine": "Message on LINE",
+    "messageOnFacebook": "Message on Facebook"
+  },
+  "errors": {
+    "notFound": "Page not found",
+    "serverError": "Server error occurred",
+    "tryAgain": "Try Again"
+  }
+}

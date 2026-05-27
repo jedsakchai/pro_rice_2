@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ประวัติที่สำเร็จแล้ว">
+    <title>ประวัติที่สำเร็จแล้ว - โรงสีชุมชน</title>
+    <link rel="stylesheet" href="/css/output.css">
+    <style>
+        .tab-btn {
+            padding: 10px 20px;
+            border: none;
+            background: #e5e7eb;
+            cursor: pointer;
+            font-weight: 500;
+            border-radius: 4px 4px 0 0;
+            margin-right: 5px;
+            transition: all 0.3s;
+        }
+        .tab-btn.active {
+            background: #10b981;
+            color: white;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body class="min-h-screen relative bg-gradient-to-r from-field-600 via-field-700 to-sky-600">
+    <img src="/images/rice-mill-hero.jpg" alt="" aria-hidden="true" class="pointer-events-none absolute inset-0 z-0 h-full w-full object-cover opacity-20">
+
+    <main class="relative z-10 min-h-screen">
+        <section class="container-custom py-8">
+            <div class="overflow-hidden rounded-lg">
+                <div class="bg-field-700 text-white px-4 py-3">
+                    <div class="flex items-center justify-between gap-3">
+                        <div>
+                            <div class="font-semibold">ประวัติที่สำเร็จแล้ว</div>
+                            <div class="text-xs text-white/90 mt-1">ข้อมูลการสั่งซื้อและการสีข้าวที่สำเร็จแล้ว</div>
+                        </div>
+                        <a href="/" class="btn-secondary px-4 py-2">กลับหน้าแรก</a>
+                    </div>
+                </div>
+
+                <div class="p-4 md:p-6">
+                    <!-- Tab Buttons -->
+                    <div class="flex gap-2 mb-4 border-b border-gray-300">
+                        <button class="tab-btn active" data-tab="orders">
+                            📦 ประวัติการสั่งซื้อสินค้า
+                        </button>
+                        <button class="tab-btn" data-tab="milling">
+                            🌾 ประวัติการสีข้าว
+                        </button>
+                    </div>
+
+                    <!-- Orders Tab -->
+                    <div id="orders" class="tab-content active">
+                        <div class="card overflow-x-auto">
+                            <table class="min-w-full text-sm text-slate-800 border-collapse">
+                                <thead>
+                                    <tr class="bg-slate-50">
+                                        <th class="border border-slate-300 px-3 py-2 text-left w-16">ลำดับ</th>
+                                        <th class="border border-slate-300 px-3 py-2 text-left">เลขที่คำสั่งซื้อ</th>
+                                        <th class="border border-slate-300 px-3 py-2 text-left">โรงสี</th>
+                                        <th class="border border-slate-300 px-3 py-2 text-left">จำนวนสินค้า</th>
+                                        <th class="border border-slate-300 px-3 py-2 text-left">รวม</th>
+                                        <th class="border border-slate-300 px-3 py-2 text-left">สถานะ</th>
+                                        <th class="border border-slate-300 px-3 py-2 text-left">วันที่สั่ง</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="orders-rows"></tbody>
+                            </table>
+                        </div>
+                        <div id="orders-empty" class="hidden mt-4 text-center text-sm text-gray-600">
+                            ยังไม่มีประวัติการสั่งซื้อ
+                        </div>
+                    </div>
+
+                    <!-- Milling Tab -->
+                    <div id="milling" class="tab-content">
+                        <div class="card overflow-x-auto">
+                            <table class="min-w-full text-sm text-slate-800 border-collapse">
+                                <thead>
+                                    <tr class="bg-slate-50">
+                                        <th class="border border-slate-300 px-3 py-2 text-left w-16">ลำดับ</th>
+                                        <th class="border border-slate-300 px-3 py-2 text-left">โรงสี</th>
+                                        <th class="border border-slate-300 px-3 py-2 text-left">ชนิดข้าว</th>
+                                        <th class="border border-slate-300 px-3 py-2 text-left">จำนวน (กระสอบ)</th>
+                                        <th class="border border-slate-300 px-3 py-2 text-left">วันส่ง</th>
+                                        <th class="border border-slate-300 px-3 py-2 text-left">สถานะ</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="milling-rows"></tbody>
+                            </table>
+                        </div>
+                        <div id="milling-empty" class="hidden mt-4 text-center text-sm text-gray-600">
+                            ยังไม่มีประวัติการสีข้าว
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div id="toast-container"></div>
+    <script src="/js/main.js"></script>
+    <script src="/js/my-history-combined.js" defer></script>
+</body>
+</html>

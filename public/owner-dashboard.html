@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="แดชบอร์ดเจ้าของโรงสี">
+    <title>แดชบอร์ด - เจ้าของโรงสี</title>
+    <link rel="stylesheet" href="/css/output.css">
+</head>
+<body class="min-h-screen relative bg-gradient-to-r from-field-600 via-field-700 to-sky-600">
+    <!--
+        แดชบอร์ด (Owner)
+        - หน้าเมนูรวมสำหรับเจ้าของโรงสี (ลิงก์ไปหน้า ตรวจสอบ/ผล/สอบถาม)
+        - ไม่มีการเรียก API ในหน้าเอง เป็นแค่ทางเข้าหน้าจัดการ
+    -->
+    <!-- พื้นหลังแบบ hero (เหมือนหน้า index): รูปภาพจาง ๆ อยู่หลังเนื้อหา -->
+    <img src="/images/rice-mill-hero.jpg" alt="" aria-hidden="true" class="pointer-events-none absolute inset-0 z-0 h-full w-full object-cover opacity-20">
+
+    <main class="relative z-10 min-h-screen">
+        <section class="container-custom py-10">
+            <div class="overflow-hidden rounded-lg">
+                <header class="bg-field-700 text-white px-5 py-3 font-semibold">แดชบอร์ด</header>
+
+                <div class="px-4 py-10">
+                    <div class="card max-w-2xl mx-auto">
+                        <div class="text-center">
+                            <h1 class="text-2xl md:text-3xl font-bold text-field-700">แดชบอร์ดเจ้าของโรงสี</h1>
+                            <p id="mill-name-display" class="mt-2 text-lg font-semibold text-field-700"></p>
+                            <p class="mt-2 text-sm md:text-base text-gray-600">เลือกเมนูที่ต้องการจัดการข้อมูล</p>
+                        </div>
+
+                        <div class="mt-6 grid gap-4">
+                            <a href="/owner-check.html" class="btn-primary w-full inline-flex items-center justify-between gap-3">
+                                <span class="inline-flex items-center justify-center w-8 h-8 bg-white/20 rounded">
+                                    <svg viewBox="0 0 24 24" class="w-5 h-5" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M7 7h10M7 11h10M7 15h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                        <path d="M6 3h12a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="2"/>
+                                    </svg>
+                                </span>
+                                <span class="flex-1 text-center">ตรวจสอบคำขอการสีข้าว</span>
+                                <span id="owner-check-count" class="ml-auto inline-flex min-w-7 h-7 items-center justify-center rounded-full bg-white text-field-700 text-xs font-bold px-2 hidden">0</span>
+                            </a>
+
+                            <a href="/owner-orders.html" class="btn-primary w-full inline-flex items-center justify-between gap-3">
+                                <span class="inline-flex items-center justify-center w-8 h-8 bg-white/20 rounded">
+                                    <svg viewBox="0 0 24 24" class="w-5 h-5" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M7 7h10M7 11h10M7 15h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                        <path d="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="2"/>
+                                        <path d="M7 19h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                    </svg>
+                                </span>
+                                <span class="flex-1 text-center">ตรวจสอบคำสั่งซื้อสินค้า</span>
+                                <span id="owner-order-count" class="ml-auto inline-flex min-w-7 h-7 items-center justify-center rounded-full bg-white text-field-700 text-xs font-bold px-2 hidden">0</span>
+                            </a>
+
+                            <a href="/owner-inquiries.html" class="btn-primary w-full inline-flex items-center justify-center gap-3">
+                                <span class="inline-flex items-center justify-center w-8 h-8 bg-white/20 rounded">
+                                    <svg viewBox="0 0 24 24" class="w-5 h-5" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M7 8h10M7 12h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                        <path d="M21 12c0 4.418-4.03 8-9 8-1.06 0-2.08-.163-3.03-.46L3 21l1.21-4.21C3.45 15.39 3 13.74 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                                    </svg>
+                                </span>
+                                สอบถาม
+                            </a>
+
+                            <a href="/owner-map.html" class="btn-primary w-full inline-flex items-center justify-center gap-3">
+                                <span class="inline-flex items-center justify-center w-8 h-8 bg-white/20 rounded">
+                                    <svg viewBox="0 0 24 24" class="w-5 h-5" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M12 2C5.925 2 1 6.925 1 13c0 6.075 4.925 9 11 9s11-2.925 11-9c0-6.075-4.925-11-11-11Zm0 16c-3.866 0-7-2.134-7-5s3.134-5 7-5 7 2.134 7 5-3.134 5-7 5Z" fill="currentColor"/>
+                                    </svg>
+                                </span>
+                                ตำแหน่งโรงสี
+                            </a>
+
+                            <div class="pt-2 text-center flex flex-col sm:flex-row gap-2 justify-center">
+                                <a href="#" class="btn-link text-sm text-red-600 hover:text-red-800" onclick="event.preventDefault();window.OwnerSession?.clear?.();window.location.href='/';">ออกจากระบบ</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- main.js: utility/toast (กรณีมีการใช้งานร่วมในหน้าอื่น) -->
+    <script src="/js/main.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+        const el = document.getElementById('mill-name-display');
+        if (!el) return;
+        try {
+            const session = window.OwnerSession?.get?.();
+            if (session?.mill_id) {
+                const resp = await fetch('/api/mills');
+                const json = await resp.json();
+                if (json.success && json.data && json.data.length > 0) {
+                    const mill = json.data.find((item) => Number(item.mill_id) === Number(session.mill_id)) || json.data[0];
+                    el.textContent = mill.mill_name_th || mill.mill_name || '';
+                }
+            }
+
+            const ownerCheckCountEl = document.getElementById('owner-check-count');
+            const ownerOrderCountEl = document.getElementById('owner-order-count');
+            if (!session?.mill_id) return;
+
+            const [millingsResp, ordersResp] = await Promise.all([
+                fetch('/api/milling-requests/count'),
+                fetch('/api/orders/count'),
+            ]);
+
+            const [millingsJson, ordersJson] = await Promise.all([millingsResp.json(), ordersResp.json()]);
+
+            const pendingMillingCount = Number(millingsJson?.data?.count || 0);
+            const pendingOrderCount = Number(ordersJson?.data?.count || 0);
+
+            if (ownerCheckCountEl) {
+                if (pendingMillingCount > 0) {
+                    ownerCheckCountEl.textContent = pendingMillingCount > 99 ? '99+' : String(pendingMillingCount);
+                    ownerCheckCountEl.classList.remove('hidden');
+                } else {
+                    ownerCheckCountEl.classList.add('hidden');
+                }
+            }
+
+            if (ownerOrderCountEl) {
+                if (pendingOrderCount > 0) {
+                    ownerOrderCountEl.textContent = pendingOrderCount > 99 ? '99+' : String(pendingOrderCount);
+                    ownerOrderCountEl.classList.remove('hidden');
+                } else {
+                    ownerOrderCountEl.classList.add('hidden');
+                }
+            }
+        } catch { /* ignore */ }
+    });
+    </script>
+</body>
+</html>
+

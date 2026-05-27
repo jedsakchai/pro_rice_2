@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ติดต่อเรา">
+    <title>ติดต่อเรา - โรงสีชุมชน</title>
+    <link rel="stylesheet" href="/css/output.css">
+</head>
+<body>
+    <!--
+        ติดต่อเรา (Public)
+        - ส่วนหัว (Page Header) ใช้สไตล์ hero เหมือนหน้า index
+        - แสดงช่องทางติดต่อ, แผนที่/ตำแหน่ง และ FAQ (ไม่มีการเรียก API)
+        - เมนูมือถือ/utility ต่าง ๆ ใช้ /js/main.js
+    -->
+    <!-- Header Navigation -->
+    <header class="sticky top-0 z-40 bg-white shadow-subtle">
+        <nav class="container-custom py-4 flex items-center justify-between">
+            <a href="/" class="flex items-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-field-600">
+                <span class="text-xl md:text-2xl font-bold text-field-700">โรงสีชุมชน</span>
+            </a>
+            <ul class="hidden md:flex gap-8 items-center">
+                <li><a href="/" class="text-gray-700 hover:text-field-700">หน้าแรก</a></li>
+                <li><a href="/inquiry.html" class="text-gray-700 hover:text-field-700">สอบถาม</a></li>
+
+                <li><a href="/contact.html" class="text-field-700 font-semibold">ติดต่อ</a></li>
+                <li><a href="/login.html" class="text-gray-700 hover:text-field-700">เจ้าของโรงสี</a></li>
+            </ul>
+
+            <button id="mobile-menu-btn" class="md:hidden p-2 hover:bg-gray-100 rounded-lg" aria-label="เปิดเมนูมือถือ" aria-expanded="false">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+            </button>
+        </nav>
+
+        <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-gray-100">
+            <ul class="container-custom py-4 space-y-2">
+                <li><a href="/" class="block py-2 text-gray-700 hover:text-field-700">หน้าแรก</a></li>
+                <li><a href="/inquiry.html" class="block py-2 text-gray-700 hover:text-field-700">สอบถาม</a></li>
+                <li><a href="/contact.html" class="block py-2 text-field-700 font-semibold">ติดต่อ</a></li>
+                <li><a href="/login.html" class="block py-2 text-gray-700 hover:text-field-700">เจ้าของโรงสี</a></li>
+            </ul>
+        </div>
+    </header>
+
+    <main>
+        <!-- Page Header -->
+        <section class="relative isolate overflow-hidden bg-gradient-to-r from-rice-700 to-rice-800 text-white py-12 md:py-16">
+            <img src="/images/rice-mill-hero.jpg" alt="Rice Mill Hero Image" class="pointer-events-none absolute inset-0 z-0 h-full w-full object-cover opacity-20">
+            <div class="container-custom relative z-10">
+                <h1 class="text-white mb-2">ติดต่อเรา</h1>
+                <p class="text-lg text-field-50">เรามีสาขาหลายแห่ง พร้อมให้บริการอย่างเต็มที่ ตลอด 24 ชั่วโมง</p>
+            </div>
+        </section>
+
+        <!-- Contact Channels -->
+        <section id="owner" class="py-12 md:py-16">
+            <div class="container-custom">
+                <h2 class="text-center mb-12">ช่องทางติดต่อ</h2>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16" id="mill-cards-container">
+                    <!-- โหลดข้อมูลจาก API -->
+                    <div class="card text-center col-span-full">
+                        <p class="text-gray-500">กำลังโหลดข้อมูลโรงสี...</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Map Section -->
+        <section class="py-12 md:py-16 bg-gray-50">
+            <div class="container-custom">
+                <h2 class="text-center mb-12">ตำแหน่งของเรา</h2>
+                <div class="w-full rounded-lg overflow-hidden shadow-subtle" style="height: 400px; max-width: 100%;">
+                    <iframe
+                        id="contact-map-embed"
+                        class="w-full h-full"
+                        src="https://www.google.com/maps?q=%E0%B8%9B%E0%B8%A3%E0%B8%B0%E0%B9%80%E0%B8%97%E0%B8%A8%E0%B9%84%E0%B8%97%E0%B8%A2&hl=th&gl=TH&t=m&z=6&output=embed"
+                        style="border:0;"
+                        allowfullscreen=""
+                        loading="lazy"
+                        referrerpolicy="no-referrer-when-downgrade"></iframe>
+                </div>
+            </div>
+        </section>
+
+        <!-- FAQ Section -->
+        <section class="bg-grain-100 py-12 md:py-16">
+            <div class="container-custom">
+                <h2 class="text-center mb-12">คำถามที่พบบ่อย</h2>
+
+                <div class="max-w-2xl mx-auto space-y-4">
+                    <details class="card cursor-pointer">
+                        <summary class="font-semibold text-field-700">เวลาเปิด-ปิดของเราเป็นอย่างไร?</summary>
+                        <p class="text-gray-600 mt-3">เปิดจันทร์ - ศุกร์ 06:00 - 20:00 เสาร์ 07:00 - 16:00 ปิดวันอาทิตย์และวันหยุดราชการ</p>
+                    </details>
+
+                    <details class="card cursor-pointer">
+                        <summary class="font-semibold text-field-700">สีข้าวใช้เวลานานแค่ไหน?</summary>
+                        <p class="text-gray-600 mt-3">โดยปกติใช้เวลา 2-3 วันทำการขึ้นอยู่กับปริมาณและสภาพข้าว เราจะแจ้งเวลาที่แน่นอนเมื่อคุณส่งคำขอ</p>
+                    </details>
+
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-field-900 text-white mt-16">
+        <div class="container-custom py-12">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+                <div>
+                    <h3 class="text-lg font-bold mb-4">โรงสีชุมชน</h3>
+                    <p class="text-field-50 text-sm">บริการสีข้าวคุณภาพ มาตรฐานและเชื่อถือได้ ใส่ใจความพึงพอใจของลูกค้า</p>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-4">ลิงก์ด่วน</h4>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="/" class="text-field-50 hover:text-white">หน้าแรก</a></li>
+                        <li><a href="/milling.html" class="text-field-50 hover:text-white">ขอสีข้าว</a></li>
+                        <li><a href="/inquiry.html" class="text-field-50 hover:text-white">สอบถาม</a></li>
+                        <li><a href="/contact.html" class="text-field-50 hover:text-white">ติดต่อ</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-4">ติดต่อเรา</h4>
+                    <p class="text-sm text-field-50 mb-2">เบอร์โทร: <a href="tel:+66858814530" class="hover:text-white">085-881-4530</a></p>
+                    <p class="text-sm text-field-50">อีเมล: <a href="mailto:contact@ricemillsite.com" class="hover:text-white">contact@ricemillsite.com</a></p>
+                </div>
+            </div>
+            <hr class="border-field-700 mb-8">
+            <div class="text-center text-sm text-field-50">
+                <p>&copy; 2025 โรงสีชุมชน สงวนลิขสิทธิ์</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- main.js: เมนูมือถือ + utility/toast (ถ้ามีการเรียกใช้ในหน้าอื่น) -->
+    <script src="/js/main.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const container = document.getElementById('mill-cards-container');
+                                                const mapFrame = document.getElementById('contact-map-embed');
+      if (!container) return;
+
+            const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+
+            // Thailand bounds (approx) to keep map in Thailand
+            const TH_BOUNDS = { latMin: 5.5, latMax: 20.6, lngMin: 97.3, lngMax: 105.7 };
+            const isWithinThailand = (lat, lng) => (
+                Number.isFinite(lat) && Number.isFinite(lng) &&
+                lat >= TH_BOUNDS.latMin && lat <= TH_BOUNDS.latMax &&
+                lng >= TH_BOUNDS.lngMin && lng <= TH_BOUNDS.lngMax
+            );
+
+            const extractFirstUrl = (text) => {
+                const s = String(text || '');
+                const m = s.match(/https?:\/\/\S+/i);
+                return m ? m[0] : null;
+            };
+
+            async function resolveLatLngFromMill(mill) {
+                if (!mill) return null;
+                const lat = mill.latitude !== undefined && mill.latitude !== null ? Number(mill.latitude) : null;
+                const lng = mill.longitude !== undefined && mill.longitude !== null ? Number(mill.longitude) : null;
+                const addr = (mill.location_th || mill.location || '').trim();
+
+                if (Number.isFinite(lat) && Number.isFinite(lng)) {
+                    const safeLat = clamp(lat, -90, 90);
+                    const safeLng = clamp(lng, -180, 180);
+                    if (!isWithinThailand(safeLat, safeLng)) return null;
+                    return { lat: safeLat, lng: safeLng };
+                }
+
+                const urlInText = addr ? extractFirstUrl(addr) : null;
+                if (urlInText) {
+                    try {
+                        const res = await fetch(`/api/utils/resolve-maps?url=${encodeURIComponent(urlInText)}`);
+                        const json = await res.json().catch(() => null);
+                        const rLat = Number(json?.lat);
+                        const rLng = Number(json?.lng);
+                        if (res.ok && json?.success && Number.isFinite(rLat) && Number.isFinite(rLng) && isWithinThailand(rLat, rLng)) {
+                            return { lat: rLat, lng: rLng };
+                        }
+                    } catch (e) {
+                        console.warn('resolve-maps failed', e);
+                    }
+                }
+
+                return null;
+            }
+
+            const setMapToThailandDefault = () => {
+                if (!mapFrame) return;
+                mapFrame.src = 'https://www.google.com/maps?q=' + encodeURIComponent('ประเทศไทย') + '&hl=th&gl=TH&t=m&z=6&output=embed';
+            };
+
+            const setMapFromLatLng = (lat, lng) => {
+                if (!mapFrame) return;
+                if (!isWithinThailand(lat, lng)) {
+                    setMapToThailandDefault();
+                    return;
+                }
+                mapFrame.src = `https://www.google.com/maps?q=${encodeURIComponent(String(lat) + ',' + String(lng))}&hl=th&gl=TH&t=m&z=16&output=embed`;
+            };
+
+      const esc = (v) => {
+        const s = String(v ?? '');
+        const d = document.createElement('span');
+        d.textContent = s;
+        return d.innerHTML;
+      };
+
+      try {
+        const resp = await fetch('/api/mills');
+        const json = await resp.json();
+        if (!resp.ok || !json.success) throw new Error(json.message || 'error');
+
+        const mills = json.data;
+        if (!mills || mills.length === 0) {
+          container.innerHTML = '<div class="card text-center col-span-full"><p class="text-gray-500">ไม่พบข้อมูลโรงสี</p></div>';
+          return;
+        }
+
+                // Canonical mill names to match the homepage cards
+                const MILL_NAME_MAP = {
+                    1: 'โรงสีจังหวัดกลาง',
+                    2: 'โรงสีเหนือวิลเลจ',
+                    3: 'โรงสีใต้ พรีเมี่ยม'
+                };
+
+                // Map:
+                // - Owner (single mill): show that mill
+                // - Villager/multiple mills: show the first mill (Google iframe doesn't support multi-pins without an API key)
+                const session = window.OwnerSession?.get?.();
+                const isOwnerSingle = session && session.role === 'owner' && mills.length === 1;
+
+                const targetMill = isOwnerSingle ? mills[0] : mills[0];
+                const coords = await resolveLatLngFromMill(targetMill);
+                if (coords) setMapFromLatLng(coords.lat, coords.lng);
+                else setMapToThailandDefault();
+
+        // ถ้าเป็นเจ้าของโรงสี (1 รายการ) แสดงการ์ดใหญ่กลางจอ
+        const isSingleOwner = isOwnerSingle;
+
+        if (isSingleOwner) {
+          container.className = 'flex justify-center mb-16';
+        }
+
+        container.innerHTML = mills.map(m => {
+                    const name = MILL_NAME_MAP[m.mill_id] || m.mill_name_th || m.mill_name || '-';
+          const addr = m.location_th || '-';
+          const phone = m.phone || '-';
+          // รูปภาพโรงสีจากหน้าแรก
+          const imgMap = { 1: '/images/mill-1.jpg', 2: '/images/mill-2.png', 3: '/images/mill-3.jpg' };
+          const img = imgMap[m.mill_id] || '/images/rice-mill-hero.jpg';
+
+          if (isSingleOwner) {
+            return `
+              <div class="card overflow-hidden p-0 w-full max-w-xl">
+                <div class="w-full h-72 overflow-hidden">
+                  <img src="${img}" alt="${esc(name)}" class="w-full h-full object-cover">
+                </div>
+                <div class="p-8 text-center">
+                  <h3 class="text-2xl font-bold text-field-700 mb-3">${esc(name)}</h3>
+                  <p class="text-lg text-gray-600 mb-3">${esc(addr)}</p>
+                  ${phone !== '-' ? `<p class="text-lg text-gray-600 mb-4">โทร: <a href="tel:${esc(phone)}" class="text-field-700 hover:underline">${esc(phone)}</a></p>` : '<p class="mb-4"></p>'}
+                </div>
+              </div>
+            `;
+          }
+
+          return `
+            <div class="card overflow-hidden p-0">
+              <div class="w-full h-48 overflow-hidden">
+                <img src="${img}" alt="${esc(name)}" class="w-full h-full object-cover">
+              </div>
+              <div class="p-5 text-center">
+                <h3 class="text-lg font-bold text-field-700 mb-2">${esc(name)}</h3>
+                <p class="text-gray-600 mb-2">${esc(addr)}</p>
+                ${phone !== '-' ? `<p class="text-gray-600 mb-4">โทร: <a href="tel:${esc(phone)}" class="text-field-700 hover:underline">${esc(phone)}</a></p>` : '<p class="mb-4"></p>'}
+              </div>
+            </div>
+          `;
+        }).join('');
+      } catch (err) {
+        console.error(err);
+        container.innerHTML = '<div class="card text-center col-span-full"><p class="text-red-600">โหลดข้อมูลโรงสีไม่สำเร็จ</p></div>';
+      }
+    });
+    </script>
+</body>
+</html>
+

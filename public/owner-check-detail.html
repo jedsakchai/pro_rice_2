@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="รายละเอียดการเข้าร่วม">
+    <title>ตรวจสอบคำขอการสีข้าว - รายละเอียด</title>
+    <link rel="stylesheet" href="/css/output.css">
+</head>
+<body class="min-h-screen relative bg-gradient-to-r from-field-600 via-field-700 to-sky-600">
+    <!--
+        ตรวจสอบคำขอการสีข้าว - รายละเอียด (Owner)
+        - แสดงรายละเอียดคำขอ 1 รายการ โดยอ่าน id จาก query string
+        - เจ้าของสามารถเปลี่ยนสถานะ review_status แล้วกด “บันทึก”
+        - /js/owner-check-detail.js จะ fetch รายละเอียด + ส่ง PUT เพื่อบันทึก
+    -->
+    <!-- พื้นหลังแบบ hero (เหมือนหน้า index): รูปภาพจาง ๆ อยู่หลังเนื้อหา -->
+    <img src="/images/rice-mill-hero.jpg" alt="" aria-hidden="true" class="pointer-events-none absolute inset-0 z-0 h-full w-full object-cover opacity-20">
+
+    <main class="relative z-10 min-h-screen">
+        <section class="container-custom py-8">
+            <div class="overflow-hidden rounded-lg">
+                <div class="bg-field-700 text-white px-4 py-3">
+                    <div class="flex items-center justify-between gap-3">
+                        <div class="font-semibold">ตรวจสอบคำขอการสีข้าว</div>
+                        <a href="/owner-check.html" class="btn-secondary px-4 py-2">ย้อนกลับ</a>
+                    </div>
+                    <div class="text-xs text-white/90 mt-1">รายละเอียดคำขอ</div>
+                </div>
+
+                <div class="p-4 md:p-6">
+                    <div class="card text-sm text-gray-900 leading-7">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- Left column: Customer Info -->
+                            <div class="space-y-3">
+                                <h3 class="font-semibold text-field-700 mb-3">ข้อมูลลูกค้า</h3>
+                                <div>ชื่อ-นามสกุล : <span id="full-name" class="font-medium">-</span></div>
+                                <div>เบอร์โทร : <span id="customer-phone" class="font-medium">-</span></div>
+                                <div>ที่อยู่ : <span id="customer-address" class="font-medium">-</span></div>
+                            </div>
+                            
+                            <!-- Right column: Request Info -->
+                            <div class="space-y-3">
+                                <h3 class="font-semibold text-field-700 mb-3">รายละเอียดคำขอ</h3>
+                                <div>ชื่อโรงสี : <span id="mill-name" class="font-medium">-</span></div>
+                                <div>ประเภทข้าว : <span id="rice-type" class="font-medium">-</span></div>
+                                <div>จำนวนกระสอบ : <span id="sacks" class="font-medium">-</span></div>
+                                <div>วันที่ส่ง : <span id="dropoff-date" class="font-medium">-</span></div>
+                                <div>วันที่คาดว่าจะได้รับคืน : <span id="return-date" class="font-medium">-</span></div>
+                                <div>หมายเหตุ : <span id="notes" class="font-medium">-</span></div>
+                            </div>
+                        </div>
+
+                        <hr class="my-6">
+
+                        <!-- Status Management -->
+                        <div class="space-y-4">
+                            <h3 class="font-semibold text-field-700">จัดการสถานะ</h3>
+                            
+                            <!-- participation confirmation removed: managed only in list or omitted -->
+                            
+                            <div>
+                                <div class="text-gray-700 mb-1">สถานะการดำเนินการ</div>
+                                <select id="process-status" class="w-full max-w-md rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rice-600">
+                                    <option value="pending_review">รอตรวจสอบ</option>
+                                    <option value="accepted">รับคำสั่งแล้ว</option>
+                                    <option value="awaiting_pickup">รอไปรับข้าว</option>
+                                    <option value="received">รับข้าวแล้ว</option>
+                                    <option value="queued">รอคิวสี</option>
+                                    <option value="milling">กำลังสีข้าว</option>
+                                    <option value="packing">กำลังแพ็ก</option>
+                                    <option value="ready">พร้อมรับ/จัดส่ง</option>
+                                    <option value="shipping">กำลังจัดส่ง</option>
+                                    <option value="delivered">ส่งมอบแล้ว</option>
+                                    <option value="cancelled">ยกเลิก</option>
+                                </select> 
+                            </div>
+
+                            <!-- review-status removed per request -->
+
+                            <div id="cancelled-hint" class="hidden mt-3 text-sm text-red-700">รายการนี้ถูกยกเลิกแล้ว</div>
+
+                            <div class="flex items-center gap-4 pt-4">
+                                <button id="btn-save" type="button" class="btn-primary px-8 py-2">บันทึก</button>
+                                <a href="/owner-check.html" class="btn-secondary px-8 py-2">ย้อนกลับ</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div id="toast-container"></div>
+
+    <!-- main.js: utility/toast (FormUtils) -->
+    <script src="/js/main.js"></script>
+    <!-- owner-check-detail.js: โหลดรายละเอียดตาม id + อัปเดตสถานะผ่าน API -->
+    <script src="/js/owner-check-detail.js" defer></script>
+</body>
+</html>
+

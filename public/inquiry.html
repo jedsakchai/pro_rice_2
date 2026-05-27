@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ส่งคำถามหรือสอบถาม">
+    <title>สอบถาม - โรงสีชุมชน</title>
+    <link rel="stylesheet" href="/css/output.css">
+</head>
+<body>
+    <!--
+        สอบถาม (Public)
+        - ฟอร์มส่งคำถาม (#inquiry-form) จะ POST ไปที่ API
+        - ตาราง “คำถามของลูกค้า” จะแสดงรายการจาก API (อ่านอย่างเดียวฝั่งลูกค้า)
+        - โค้ดฝั่งหน้าเว็บอยู่ใน /js/inquiry-form.js และ /js/inquiry-table.js
+    -->
+    <!-- Header Navigation -->
+    <header class="sticky top-0 z-40 bg-white shadow-subtle">
+        <nav class="container-custom py-4 flex items-center justify-between">
+             <a href="/" class="flex items-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-field-600">
+                <span class="text-xl md:text-2xl font-bold text-field-700">โรงสีชุมชน</span>
+            </a>
+
+            <ul class="hidden md:flex gap-8 items-center">
+                <li><a href="/" class="text-gray-700 hover:text-field-700">หน้าแรก</a></li>
+                <li><a href="/inquiry.html" class="text-field-700 font-semibold">สอบถาม</a></li>
+
+                <li><a href="/contact.html" class="text-gray-700 hover:text-field-700">ติดต่อ</a></li>
+                <li><a href="/login.html" class="text-gray-700 hover:text-field-700">เจ้าของโรงสี</a></li>
+            </ul>
+
+            <button id="mobile-menu-btn" class="md:hidden p-2 hover:bg-gray-100 rounded-lg" aria-label="เปิดเมนูมือถือ" aria-expanded="false">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+            </button>
+        </nav>
+
+        <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-gray-100">
+            <ul class="container-custom py-4 space-y-2">
+                <li><a href="/" class="block py-2 text-gray-700 hover:text-field-700">หน้าแรก</a></li>
+                <li><a href="/inquiry.html" class="block py-2 text-field-700 font-semibold">สอบถาม</a></li>
+                <li><a href="/contact.html" class="block py-2 text-gray-700 hover:text-field-700">ติดต่อ</a></li>
+                <li><a href="/login.html" class="block py-2 text-gray-700 hover:text-field-700">เจ้าของโรงสี</a></li>
+            </ul>
+        </div>
+    </header>
+
+    <main>
+        <!-- Page Header -->
+        <section class="relative isolate overflow-hidden bg-gradient-to-r from-rice-700 to-rice-800 text-white py-12 md:py-16">
+            <img src="/images/rice-mill-hero.jpg" alt="Rice Mill Hero Image" class="pointer-events-none absolute inset-0 z-0 h-full w-full object-cover opacity-20">
+            <div class="container-custom relative z-10">
+                <h1 class="text-white mb-2">ส่งคำถามหรือสอบถาม</h1>
+                <p class="text-lg text-field-50">มีคำถามเรื่องสีข้าวหรือข้อมูลเพิ่มเติม? โปรดกรอกฟอร์มด้านล่าง</p>
+            </div>
+        </section>
+
+        <!-- Form Section -->
+        <section class="py-12 md:py-16">
+            <div class="container-custom max-w-2xl">
+                <form id="inquiry-form" class="card mb-8">
+                    <!-- Subject -->
+                    <div class="mb-6">
+                        <label for="subject" class="form-label">หัวข้อ *</label>
+                        <input type="text" id="subject" name="subject" placeholder="เช่น สอบถามราคา" class="input-field" required maxlength="150">
+                        <div id="subject-error" class="form-error hidden"></div>
+                    </div>
+
+                    <!-- Message -->
+                    <div class="mb-6">
+                        <label for="message" class="form-label">ข้อความ *</label>
+                        <textarea id="message" name="message" placeholder="กรุณากรอกรายละเอียดคำถาม..." class="input-field h-32 resize-vertical" required></textarea>
+                        <div id="message-error" class="form-error hidden"></div>
+                    </div>
+
+                    <!-- Customer Name -->
+                    <div class="mb-6">
+                        <label for="customer-name" class="form-label">ชื่อ-นามสกุล *</label>
+                        <input type="text" id="customer-name" name="customer_name" placeholder="กรุณากรอกชื่อและนามสกุล" class="input-field" required maxlength="120">
+                        <div id="name-error" class="form-error hidden"></div>
+                    </div>
+
+                    <!-- Phone Number -->
+                    <div class="mb-6">
+                        <label for="phone" class="form-label">เบอร์โทรศัพท์ *</label>
+                        <input type="tel" id="phone" name="phone" placeholder="เช่น 081-234-5678" class="input-field" required maxlength="30">
+                        <div id="phone-error" class="form-error hidden"></div>
+                    </div>
+                    
+
+                    <!-- Submit Button -->
+                    <div class="flex gap-4 flex-col sm:flex-row">
+                        <button type="submit" id="submit-btn" class="btn-primary flex-1">
+                            <span id="btn-text">ส่งคำถาม</span>
+                            <span id="btn-spinner" class="hidden ml-2">...</span>
+                        </button>
+                        <button type="reset" class="btn-secondary flex-1">ล้างฟอร์ม</button>
+                    </div>
+
+                    <!-- Success Message -->
+                    <div id="success-message" class="hidden mt-6 p-4 bg-green-50 border border-green-200 rounded-lg text-green-800">
+                        ส่งคำถามสำเร็จ! เราจะตอบกลับในเร็วๆ นี้
+                    </div>
+                </form>
+
+                <div class="card mb-8 overflow-x-auto">
+                    <div class="flex items-center justify-between gap-3 mb-4">
+                        <h3 class="text-lg font-bold text-field-700">คำถามของลูกค้า</h3>
+                        <button id="btn-refresh-inquiries" type="button" class="btn-secondary px-4 py-2">รีเฟรช</button>
+                    </div>
+
+                    <table class="min-w-full text-sm text-slate-800 border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50">
+                                <th class="border border-slate-300 px-3 py-2 text-left w-16">ลำดับ</th>
+                                <th class="border border-slate-300 px-3 py-2 text-left">หัวข้อ</th>
+                                <th class="border border-slate-300 px-3 py-2 text-left">ข้อความ</th>
+                                <th class="border border-slate-300 px-3 py-2 text-left">ตอบข้อความ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inquiry-table-rows"></tbody>
+                    </table>
+
+                    <div id="inquiry-table-empty" class="hidden mt-4 text-center text-sm text-gray-600">
+                        ยังไม่มีคำถามในระบบ
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-field-900 text-white mt-16">
+        <div class="container-custom py-12">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+                <div>
+                    <h3 class="text-lg font-bold mb-4">โรงสีชุมชน</h3>
+                    <p class="text-field-50 text-sm">บริการสีข้าวคุณภาพ มาตรฐานและเชื่อถือได้ ใส่ใจความพึงพอใจของลูกค้า</p>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-4">ลิงก์ด่วน</h4>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="/" class="text-field-50 hover:text-white">หน้าแรก</a></li>
+                        <li><a href="/milling.html" class="text-field-50 hover:text-white">ขอสีข้าว</a></li>
+                        <li><a href="/inquiry.html" class="text-field-50 hover:text-white">สอบถาม</a></li>
+                        <li><a href="/contact.html" class="text-field-50 hover:text-white">ติดต่อ</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-4">ติดต่อเรา</h4>
+                    <p class="text-sm text-field-50 mb-2">เบอร์โทร: <a href="tel:+66812345678" class="hover:text-white">085-881-4530</a></p>
+                    <p class="text-sm text-field-50">อีเมล: <a href="mailto:contact@ricemillsite.com" class="hover:text-white">contact@ricemillsite.com</a></p>
+                </div>
+            </div>
+            <hr class="border-field-700 mb-8">
+            <div class="text-center text-sm text-field-50">
+                <p>&copy; 2025 โรงสีชุมชน สงวนลิขสิทธิ์</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- main.js: เมนูมือถือ + utility/toast -->
+    <script src="/js/main.js"></script>
+    <!-- inquiry-form.js: validate ฟอร์ม + ส่งคำถามไป API + แสดงผลลัพธ์/Toast -->
+    <script src="/js/inquiry-form.js"></script>
+    <!-- inquiry-table.js: ดึงรายการคำถามจาก API และ render ลงตาราง -->
+    <script src="/js/inquiry-table.js" defer></script>
+</body>
+</html>
+

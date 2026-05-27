@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="รายละเอียดคำสั่งซื้อสินค้า">
+  <title>ตรวจสอบคำสั่งซื้อสินค้า - รายละเอียด</title>
+  <link rel="stylesheet" href="/css/output.css">
+</head>
+<body class="min-h-screen relative bg-gradient-to-r from-field-600 via-field-700 to-sky-600">
+  <img src="/images/rice-mill-hero.jpg" alt="" aria-hidden="true" class="pointer-events-none absolute inset-0 z-0 h-full w-full object-cover opacity-20">
+
+  <main class="relative z-10 min-h-screen">
+    <section class="container-custom py-8">
+      <div class="overflow-hidden rounded-lg">
+        <div class="bg-field-700 text-white px-4 py-3">
+          <div class="flex items-center justify-between gap-3">
+            <div class="font-semibold">ตรวจสอบคำสั่งซื้อสินค้า</div>
+            <a href="/owner-orders.html" class="btn-secondary px-4 py-2">ย้อนกลับ</a>
+          </div>
+          <div class="text-xs text-white/90 mt-1">รายละเอียดคำสั่งซื้อ</div>
+        </div>
+
+        <div class="p-4 md:p-6">
+          <div class="card text-sm text-gray-900 leading-7">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div class="space-y-3">
+                <h3 class="font-semibold text-field-700 mb-3">ข้อมูลลูกค้าและจัดส่ง</h3>
+                <div>เลขที่คำสั่งซื้อ : <span id="order-number" class="font-medium">-</span></div>
+                <div>ชื่อ-นามสกุล : <span id="customer-name" class="font-medium">-</span></div>
+                <div>เบอร์โทรศัพท์ : <span id="customer-phone" class="font-medium">-</span></div>
+                <div>ที่อยู่ : <span id="customer-address" class="font-medium">-</span></div>
+                <div>วิธีจัดส่ง : <span id="shipping-method" class="font-medium">-</span></div>
+                <div>ค่าจัดส่ง : <span id="shipping-fee" class="font-medium">-</span></div>
+              </div>
+
+              <div class="space-y-3">
+                <h3 class="font-semibold text-field-700 mb-3">ข้อมูลชำระเงินและสถานะ</h3>
+                <div>วิธีชำระเงิน : <span id="payment-method" class="font-medium">-</span></div>
+                <div>สถานะ : <span id="order-status" class="font-medium">-</span></div>
+                <div>หมายเหตุ : <span id="order-note" class="font-medium">-</span></div>
+                <div>หลักฐานการโอน : <a id="payment-proof" href="#" target="_blank" class="text-field-700 underline hidden">ดูสลิป</a><span id="payment-proof-empty" class="font-medium">-</span></div>
+              </div>
+            </div>
+
+            <hr class="my-6">
+
+            <div class="space-y-4">
+              <h3 class="font-semibold text-field-700">รายการสินค้า</h3>
+              <div id="order-items" class="space-y-3"></div>
+
+              <div class="space-y-2 text-gray-700 max-w-md ml-auto">
+                <div class="flex justify-between"><span>ราคารวมสินค้า</span><span id="subtotal">฿0.00</span></div>
+                <div class="flex justify-between"><span>ค่าจัดส่ง</span><span id="summary-shipping">฿0.00</span></div>
+                <div class="flex justify-between font-semibold text-field-700 text-lg"><span>ราคาสุทธิ</span><span id="grand-total">฿0.00</span></div>
+              </div>
+            </div>
+
+            <hr class="my-6">
+
+            <div class="space-y-4">
+              <h3 class="font-semibold text-field-700">จัดการสถานะ</h3>
+              <div>
+                <div class="text-gray-700 mb-1">สถานะคำสั่งซื้อ</div>
+                <select id="order-status-select" class="w-full max-w-md rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rice-600">
+                  <option value="pending">รอดำเนินการ</option>
+                  <option value="accepted">ยอมรับคำสั่งซื้อแล้ว</option>
+                  <option value="pending_payment">รอชำระเงิน</option>
+                  <option value="payment_review">รอตรวจสอบการชำระเงิน</option>
+                  <option value="paid">ชำระเงินแล้ว</option>
+                  <option value="preparing">กำลังเตรียมสินค้า</option>
+                  <option value="ready_to_ship">พร้อมจัดส่ง</option>
+                  <option value="shipping">จัดส่งแล้ว</option>
+                  <option value="completed">สำเร็จ</option>
+                  <option value="cancelled">ยกเลิก</option>
+                </select>
+              </div>
+
+              <div class="flex items-center gap-4 pt-4">
+                <button id="btn-save" type="button" class="btn-primary px-8 py-2">บันทึก</button>
+                <a href="/owner-orders.html" class="btn-secondary px-8 py-2">ย้อนกลับ</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast-container"></div>
+  <script src="/js/main.js"></script>
+  <script src="/js/owner-orders-detail.js" defer></script>
+</body>
+</html>

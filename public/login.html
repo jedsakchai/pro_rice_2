@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="เข้าสู่ระบบสำหรับเจ้าของโรงสี">
+    <title>เข้าสู่ระบบ - เจ้าของโรงสี</title>
+    <link rel="stylesheet" href="/css/output.css">
+</head>
+<body class="min-h-screen relative bg-gradient-to-r from-rice-700 to-rice-800">
+    <!--
+        เข้าสู่ระบบ (Owner)
+        - ใช้เพื่อเข้า dashboard ของเจ้าของโรงสี
+        - /js/login.js จะจัดการ submit ฟอร์ม, เรียก API login, และนำทางไปหน้า owner
+        - #toast-container ใช้แสดง toast จาก FormUtils (อยู่ใน /js/main.js)
+    -->
+    <!-- พื้นหลังแบบ hero (เหมือนหน้า index): รูปภาพจาง ๆ อยู่หลังเนื้อหา -->
+    <img src="/images/rice-mill-hero.jpg" alt="" aria-hidden="true" class="pointer-events-none absolute inset-0 z-0 h-full w-full object-cover opacity-20">
+
+    <main class="relative z-10 min-h-screen flex items-center justify-center px-4 py-12">
+        <section class="w-full max-w-xl card">
+            <h1 class="text-center text-field-700 mb-8">เข้าสู่ระบบ</h1>
+
+            <form id="login-form" class="space-y-5" autocomplete="off">
+                <div>
+                    <label for="username" class="form-label">username</label>
+                    <input id="username" name="username" type="text" class="input-field" placeholder="รหัส" required maxlength="80" pattern="[A-Za-z0-9]+" title="ใช้ได้เฉพาะตัวอักษรภาษาอังกฤษและตัวเลข">
+                </div>
+
+                <div>
+                    <label for="password" class="form-label">password</label>
+                    <input id="password" name="password" type="password" class="input-field" placeholder="รหัสผ่าน" required maxlength="120" pattern="[A-Za-z0-9]+" title="ใช้ได้เฉพาะตัวอักษรภาษาอังกฤษและตัวเลข">
+                </div>
+
+                <div class="pt-2 flex justify-center">
+                    <button type="submit" class="btn-primary px-10">เข้าสู่ระบบ</button>
+                </div>
+
+                <div class="flex justify-center">
+                    <button type="button" id="register-btn" class="btn-secondary px-10">สมัคร</button>
+                </div>
+            </form>
+
+            <div class="mt-6 text-center">
+                <a href="/" class="text-sm text-field-700 hover:underline">กลับหน้าแรก</a>
+            </div>
+        </section>
+    </main>
+
+    <div id="toast-container"></div>
+
+    <!-- main.js: utility/toast (FormUtils) -->
+    <script src="/js/main.js"></script>
+    <!-- login.js: ส่งข้อมูลเข้าสู่ระบบไป API และจัดการผลลัพธ์ -->
+    <script src="/js/login.js" defer></script>
+</body>
+</html>
+

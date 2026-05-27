@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ตำแหน่งโรงสี">
+    <title>ตำแหน่งโรงสี - เจ้าของโรงสี</title>
+    <link rel="stylesheet" href="/css/output.css">
+</head>
+<body class="min-h-screen relative bg-gradient-to-r from-rice-700 to-rice-800">
+    <!--
+        ตำแหน่งโรงสี (Owner)
+        - แสดงแผนที่ตำแหน่งโรงสี
+        - ลิงก์กลับไปแดชบอร์ด
+    -->
+    <!-- พื้นหลังแบบ hero -->
+    <img src="/images/rice-mill-hero.jpg" alt="" aria-hidden="true" class="pointer-events-none absolute inset-0 z-0 h-full w-full object-cover opacity-20">
+
+    <main class="relative z-10 min-h-screen">
+        <section class="container-custom py-10">
+            <div class="overflow-hidden rounded-lg">
+                <header class="bg-field-700 text-white px-5 py-3 font-semibold">ตำแหน่งโรงสี</header>
+
+                <div class="px-4 py-10">
+                    <div class="card max-w-4xl mx-auto">
+                        <div class="text-center mb-8">
+                            <h1 class="text-2xl md:text-3xl font-bold text-field-700">ตำแหน่งโรงสี</h1>
+                            <p id="mill-name-display" class="mt-2 text-lg font-semibold text-field-700"></p>
+                        </div>
+
+                        <!-- Map Container -->
+                        <div class="w-full rounded-lg overflow-hidden shadow-subtle mb-6" style="height: 450px;">
+                            <iframe 
+                                id="map-embed"
+                                class="w-full h-full"
+                                src="https://www.google.com/maps?q=%E0%B8%9B%E0%B8%A3%E0%B8%B0%E0%B9%80%E0%B8%97%E0%B8%A8%E0%B9%84%E0%B8%97%E0%B8%A2&hl=th&gl=TH&t=m&z=6&output=embed"
+                                style="border:0;"
+                                allowfullscreen=""
+                                loading="lazy"
+                                referrerpolicy="no-referrer-when-downgrade">
+                            </iframe>
+                        </div>
+
+                        <!-- Mill Info -->
+                        <div id="mill-info" class="space-y-4 text-center">
+                            <p class="text-gray-700">กำลังโหลดข้อมูลโรงสี...</p>
+                        </div>
+
+                        <!-- Navigation -->
+                        <div class="pt-6 text-center flex flex-col sm:flex-row gap-2 justify-center border-t border-gray-200">
+                            <a href="/owner-dashboard.html" class="btn-link text-sm mt-4">กลับแดชบอร์ด</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="/js/main.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+        const millNameEl = document.getElementById('mill-name-display');
+        const millInfoEl = document.getElementById('mill-info');
+        const mapFrame = document.getElementById('map-embed');
+
+        const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+
+        // Thailand bounds (approx) to keep map in Thailand only
+        const TH_BOUNDS = { latMin: 5.5, latMax: 20.6, lngMin: 97.3, lngMax: 105.7 };
+        const isWithinThailand = (lat, lng) => (
+            Number.isFinite(lat) && Number.isFinite(lng) &&
+            lat >= TH_BOUNDS.latMin && lat <= TH_BOUNDS.latMax &&
+            lng >= TH_BOUNDS.lngMin && lng <= TH_BOUNDS.lngMax
+        );
+
+        const setMapToThailandDefault = () => {
+            if (!mapFrame) return;
+            mapFrame.src = 'https://www.google.com/maps?q=' + encodeURIComponent('ประเทศไทย') + '&hl=th&gl=TH&t=m&z=6&output=embed';
+        };
+
+        const setMapFromLatLng = (lat, lng) => {
+            if (!mapFrame) return;
+            if (!isWithinThailand(lat, lng)) {
+                setMapToThailandDefault();
+                return;
+            }
+            mapFrame.src = `https://www.google.com/maps?q=${encodeURIComponent(String(lat) + ',' + String(lng))}&hl=th&gl=TH&t=m&z=16&output=embed`;
+        };
+
+        const extractFirstUrl = (text) => {
+            const s = String(text || '');
+            const m = s.match(/https?:\/\/\S+/i);
+            return m ? m[0] : null;
+        };
+        
+        try {
+            const resp = await fetch('/api/mills');
+            const json = await resp.json();
+            
+            if (json.success && json.data && json.data.length > 0) {
+                const mill = json.data[0];
+                const name = mill.mill_name_th || mill.mill_name || 'โรงสี';
+                const addr = mill.location_th || mill.location || '-';
+                const phone = mill.phone || '-';
+                const lat = mill.latitude !== undefined && mill.latitude !== null ? Number(mill.latitude) : null;
+                const lng = mill.longitude !== undefined && mill.longitude !== null ? Number(mill.longitude) : null;
+                
+                millNameEl.textContent = name;
+
+                if (Number.isFinite(lat) && Number.isFinite(lng)) {
+                    const safeLat = clamp(lat, -90, 90);
+                    const safeLng = clamp(lng, -180, 180);
+                    setMapFromLatLng(safeLat, safeLng);
+                } else {
+                    // If address is a Google Maps link (e.g., maps.app.goo.gl), resolve to coordinates
+                    const urlInText = addr && addr !== '-' ? extractFirstUrl(addr) : null;
+                    if (urlInText) {
+                        try {
+                            const res = await fetch(`/api/utils/resolve-maps?url=${encodeURIComponent(urlInText)}`);
+                            const rjson = await res.json().catch(() => null);
+                            const rLat = Number(rjson?.lat);
+                            const rLng = Number(rjson?.lng);
+                            if (res.ok && rjson?.success && Number.isFinite(rLat) && Number.isFinite(rLng)) {
+                                setMapFromLatLng(rLat, rLng);
+                            } else {
+                                setMapToThailandDefault();
+                            }
+                        } catch {
+                            setMapToThailandDefault();
+                        }
+                    } else if (addr && addr !== '-') {
+                        // Bias search to Thailand
+                        const q = String(addr).includes('ไทย') || String(addr).toLowerCase().includes('thailand')
+                            ? String(addr)
+                            : (String(addr) + ' ประเทศไทย');
+                        mapFrame.src = `https://www.google.com/maps?q=${encodeURIComponent(q)}&hl=th&gl=TH&t=m&z=14&output=embed`;
+                    } else {
+                        setMapToThailandDefault();
+                    }
+                }
+                
+                millInfoEl.innerHTML = `
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="bg-grain-50 p-4 rounded-lg">
+                            <p class="text-sm text-gray-600 mb-1">ชื่อโรงสี</p>
+                            <p class="text-lg font-semibold text-field-700">${escapeHtml(name)}</p>
+                        </div>
+                        <div class="bg-grain-50 p-4 rounded-lg">
+                            <p class="text-sm text-gray-600 mb-1">ที่อยู่</p>
+                            <p class="text-lg font-semibold text-field-700">${escapeHtml(addr)}</p>
+                        </div>
+                        <div class="bg-grain-50 p-4 rounded-lg">
+                            <p class="text-sm text-gray-600 mb-1">โทรศัพท์</p>
+                            <p class="text-lg font-semibold text-field-700">
+                                ${phone !== '-' ? `<a href="tel:${escapeHtml(phone)}" class="text-field-700 hover:underline">${escapeHtml(phone)}</a>` : '-'}
+                            </p>
+                        </div>
+                    </div>
+                `;
+            } else {
+                millInfoEl.innerHTML = '<p class="text-red-600">ไม่พบข้อมูลโรงสี</p>';
+                setMapToThailandDefault();
+            }
+        } catch (err) {
+            console.error(err);
+            millInfoEl.innerHTML = '<p class="text-red-600">โหลดข้อมูลไม่สำเร็จ</p>';
+            setMapToThailandDefault();
+        }
+    });
+    
+    function escapeHtml(text) {
+        const map = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;'
+        };
+        return text.replace(/[&<>"']/g, m => map[m]);
+    }
+    </script>
+</body>
+</html>
+

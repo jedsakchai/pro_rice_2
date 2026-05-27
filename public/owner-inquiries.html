@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="สอบถาม">
+    <title>สอบถาม - เจ้าของโรงสี</title>
+    <link rel="stylesheet" href="/css/output.css">
+</head>
+<body class="min-h-screen relative bg-gradient-to-r from-rice-700 to-rice-800">
+    <!--
+        สอบถาม (Owner)
+        - ตารางแสดงรายการคำถามจากลูกค้า
+        - เจ้าของสามารถตอบ/เปลี่ยนสถานะ/ลบ (ตามที่หน้า owner เปิดให้ทำ)
+        - /js/owner-inquiries.js จะ fetch รายการจาก API และจัดการ action ต่าง ๆ
+    -->
+    <!-- พื้นหลังแบบ hero (เหมือนหน้า index): รูปภาพจาง ๆ อยู่หลังเนื้อหา -->
+    <img src="/images/rice-mill-hero.jpg" alt="" aria-hidden="true" class="pointer-events-none absolute inset-0 z-0 h-full w-full object-cover opacity-20">
+
+    <main class="relative z-10 min-h-screen">
+        <section class="container-custom py-8">
+            <div class="overflow-hidden rounded-lg">
+                <div class="bg-field-700 text-white px-4 py-3">
+                    <div class="flex items-center justify-between gap-3">
+                        <div class="font-semibold">สอบถาม</div>
+                        <a href="/owner-dashboard.html" class="btn-secondary px-4 py-2">กลับไปแดชบอร์ด</a>
+                    </div>
+                    <div class="text-xs text-white/90 mt-1">รายการคำถาม/สอบถามจากลูกค้า</div>
+                </div>
+
+                <div class="p-4">
+                    <div class="card overflow-x-auto">
+                        <table class="min-w-full text-sm text-slate-800 border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50">
+                                    <th class="border border-slate-300 px-3 py-2 text-left w-16">ลำดับ</th>
+                                    <th class="border border-slate-300 px-3 py-2 text-left">หัวข้อ</th>
+                                    <th class="border border-slate-300 px-3 py-2 text-left">ข้อความ</th>
+                                    <th class="border border-slate-300 px-3 py-2 text-left">ชื่อ</th>
+                                    <th class="border border-slate-300 px-3 py-2 text-left">เบอร์โทร</th>
+                                    <th class="border border-slate-300 px-3 py-2 text-left">สถานะ</th>
+                                    <th class="border border-slate-300 px-3 py-2 text-left">วันที่ส่ง</th>
+                                    <th class="border border-slate-300 px-3 py-2 text-left">คำตอบ</th>
+                                    <th class="border border-slate-300 px-3 py-2 text-left">จัดการ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inquiry-rows"></tbody>
+                        </table>
+                    </div>
+
+                    <div id="inquiry-empty" class="hidden mt-4 text-center text-sm text-gray-600">
+                        ยังไม่มีรายการสอบถามในระบบ
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div id="toast-container"></div>
+
+    <!-- main.js: utility/toast (FormUtils) -->
+    <script src="/js/main.js"></script>
+    <!-- owner-inquiries.js: โหลดรายการสอบถาม + render + เรียก API ตอบ/อัปเดต/ลบ -->
+    <script src="/js/owner-inquiries.js" defer></script>
+</body>
+</html>
+

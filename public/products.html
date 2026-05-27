@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>สินค้า - โรงสีชุมชน</title>
+    <link rel="stylesheet" href="/css/output.css">
+</head>
+<body class="text-gray-800">
+    <!-- Header & Navigation -->
+    <header class="sticky top-0 z-40 bg-white shadow-subtle">
+        <nav class="container-custom py-4 flex items-center justify-between">
+            <a href="/" class="flex items-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-field-600">
+                <span class="text-xl md:text-2xl font-bold text-field-700">โรงสีชุมชน</span>
+            </a>
+            <ul class="hidden md:flex gap-8 items-center">
+                <li><a href="/" class="text-gray-700 hover:text-field-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-field-600">หน้าแรก</a></li>
+                <li><a href="/inquiry.html" class="text-gray-700 hover:text-field-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-field-600">สอบถาม</a></li>
+                <li><a href="/contact.html" class="text-gray-700 hover:text-field-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-field-600">ติดต่อ</a></li>
+                <li><a href="/login.html" class="text-field-700 font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-field-600">เจ้าของโรงสี</a></li>
+                <li>
+                    <a href="/cart.html" class="relative text-gray-700 hover:text-field-700" aria-label="ตะกร้าสินค้า">
+                        <svg class="w-6 h-6 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4"/>
+                        </svg>
+                        <span id="cart-count" class="ml-2 inline-block bg-field-600 text-white text-xs px-2 py-0.5 rounded">0</span>
+                    </a>
+                </li>
+            </ul>
+
+            <button id="mobile-menu-btn" class="md:hidden p-2 hover:bg-gray-100 rounded-lg" aria-label="เปิดเมนูมือถือ" aria-expanded="false">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+            </button>
+        </nav>
+
+        <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-gray-100">
+            <ul class="container-custom py-4 space-y-2">
+                <li><a href="/" class="block py-2 text-gray-700 hover:text-field-700">หน้าแรก</a></li>
+                <li><a href="/inquiry.html" class="block py-2 text-gray-700 hover:text-field-700">สอบถาม</a></li>
+                <li><a href="/contact.html" class="block py-2 text-gray-700 hover:text-field-700">ติดต่อ</a></li>
+                <li><a href="/login.html" class="block py-2 text-field-700 font-semibold">เจ้าของโรงสี</a></li>
+            </ul>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container-custom py-12">
+        <h1 class="text-4xl font-bold text-center mb-4 text-field-700">รูปตัวอย่างสินค้าของเรา</h1>
+        <p class="text-center text-gray-600 mb-8">เลือกผลิตภัณฑ์ข้าวคุณภาพสูงจากโรงสีชุมชน</p>
+
+        <!-- Purchase Button -->
+        <div class="text-center mb-12">
+            <a href="/order.html" class="inline-flex items-center justify-center bg-field-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-field-700 transition">
+                สั่งซื้อ
+            </a>
+        </div>
+
+        <!-- Products Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <!-- Product 1: ข้าวสาร -->
+            <div class="bg-white rounded-lg shadow-subtle overflow-hidden hover:shadow-md transition-shadow">
+                <div class="w-full h-48 bg-gray-200 flex items-center justify-center">
+                            <img src="/images/rice-1.jpg" alt="ข้าวสาร" class="w-full h-full object-cover">
+                        </div>
+                <div class="p-6">
+                    <h3 class="text-xl font-bold text-field-700 mb-2">ข้าวสาร</h3>
+                    <p class="text-gray-600 text-sm mb-4">เมล็ดข้าวที่ผ่านการสีลอก ความสะอาด 100% พร้อมบริโภค</p>
+                    <ul class="text-xs text-gray-500 space-y-1 mb-4">
+                        <li>✓ คัดเรียงคุณภาพ</li>
+                        <li>✓ ปรือกำจัดเศษ</li>
+                        <li>✓ บรรจุอัตโนมัติ</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Product 2: รำข้าว -->
+            <div class="bg-white rounded-lg shadow-subtle overflow-hidden hover:shadow-md transition-shadow">
+                <div class="w-full h-48 bg-gray-200 flex items-center justify-center">
+                            <img src="/images/rice-2.png" alt="รำข้าว" class="w-full h-full object-cover">
+                        </div>
+                <div class="p-6">
+                    <h3 class="text-xl font-bold text-field-700 mb-2">รำข้าว</h3>
+                    <p class="text-gray-600 text-sm mb-4">ข้าวที่ลอกเปลือกนอกออก ใช้ได้หลายทาง อาหารสัตว์ หรือแหล่งแป้ง</p>
+                    <ul class="text-xs text-gray-500 space-y-1 mb-4">
+                        <li>✓ ลอกครบถ้วน</li>
+                        <li>✓ คัดคุณภาพ</li>
+                        <li>✓ ราคาคุ้มค่า</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Product 3: ปลายข้าว -->
+            <div class="bg-white rounded-lg shadow-subtle overflow-hidden hover:shadow-md transition-shadow">
+                <div class="w-full h-48 bg-gray-200 flex items-center justify-center">
+                            <img src="/images/rice-3.jpg" alt="ปลายข้าว" class="w-full h-full object-cover">
+                        </div>
+                <div class="p-6">
+                    <h3 class="text-xl font-bold text-field-700 mb-2">ปลายข้าว</h3>
+                    <p class="text-gray-600 text-sm mb-4">ครึ่งท้ายของข้าว ปลายเมล็ด ใช้สำหรับอาหารสัตว์ คุณภาพดี</p>
+                    <ul class="text-xs text-gray-500 space-y-1 mb-4">
+                        <li>✓ แยกจากประมูลพิเศษ</li>
+                        <li>✓ สะอาดใช้งาน</li>
+                        <li>✓ ราคาประหยัด</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Product 4: แกลบ -->
+            <div class="bg-white rounded-lg shadow-subtle overflow-hidden hover:shadow-md transition-shadow">
+                <div class="w-full h-48 bg-gray-200 flex items-center justify-center">
+                            <img src="/images/rice-4.jpg" alt="แกลบ" class="w-full h-full object-cover">
+                        </div>
+                <div class="p-6">
+                    <h3 class="text-xl font-bold text-field-700 mb-2">แกลบ</h3>
+                    <p class="text-gray-600 text-sm mb-4">เปลือกนอกของข้าว ใช้เป็นอาหารสัตว์ หรือเชื้อเพลิง ปริมาณมี</p>
+                    <ul class="text-xs text-gray-500 space-y-1 mb-4">
+                        <li>✓ เปลือกสะอาด</li>
+                        <li>✓ ปริมาณสม่ำเสมอ</li>
+                        <li>✓ ส่งด่วนได้</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact Section -->
+        <div class="mt-16 bg-grain-50 rounded-lg p-8 text-center">
+            <h2 class="text-2xl font-bold text-field-700 mb-4">ต้องการสั่งซื้อสินค้า?</h2>
+            <p class="text-gray-600 mb-6">ติดต่อเราได้ตลอดเวลา หรือเยี่ยมชมโรงสีใกล้บ้านของคุณ</p>
+            <div class="flex flex-col md:flex-row gap-4 justify-center">
+                <a href="/contact.html" class="px-6 py-3 bg-field-600 text-white rounded-lg font-semibold hover:bg-field-700 transition">
+                    ติดต่อเรา
+                </a>
+                <a href="/" class="px-6 py-3 border-2 border-field-600 text-field-600 rounded-lg font-semibold hover:bg-grain-50 transition">
+                    ค้นหาโรงสี
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-gray-100 mt-16">
+        <div class="container-custom py-12">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+                <div>
+                    <h3 class="text-xl font-bold text-field-400 mb-4">โรงสีชุมชน</h3>
+                    <p class="text-sm text-gray-400">บริการสีข้าวคุณภาพ มาตรฐานและเชื่อถือได้ ใส่ใจความพึงพอใจของลูกค้า</p>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold text-white mb-4">ลิงก์ด่วน</h4>
+                    <ul class="text-sm text-gray-400 space-y-2">
+                        <li><a href="/" class="hover:text-field-400">หน้าแรก</a></li>
+                        <li><a href="/milling.html" class="hover:text-field-400">ขอสีข้าว</a></li>
+                        <li><a href="/products.html" class="hover:text-field-400">สินค้า</a></li>
+                        <li><a href="/contact.html" class="hover:text-field-400">ติดต่อ</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold text-white mb-4">ติดต่อเรา</h4>
+                    <p class="text-sm text-gray-400 mb-2">
+                        <strong>เบอร์โทร:</strong>
+                        <a href="tel:+66812345678" class="hover:text-field-400">085-881-4530</a>
+                    </p>
+                    <p class="text-sm text-gray-400">
+                        <strong>อีเมล:</strong>
+                        <a href="mailto:contact@ricemillsite.com" class="hover:text-field-400">contact@ricemillsite.com</a>
+                    </p>
+                </div>
+            </div>
+            <hr class="border-gray-700 my-8">
+            <p class="text-center text-sm text-gray-400">© 2025 โรงสีชุมชน สงวนลิขสิทธิ์</p>
+        </div>
+    </footer>
+
+    <script src="/js/main.js"></script>
+</body>
+</html>
+

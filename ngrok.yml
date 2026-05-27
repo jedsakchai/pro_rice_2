@@ -1,0 +1,7 @@
+version: "3"
+
+tunnels:
+  rice-mill:
+    addr: 3002
+    proto: http
+    inspect: true

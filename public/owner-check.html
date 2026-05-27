@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ตรวจสอบคำขอการสีข้าว">
+    <title>ตรวจสอบคำขอการสีข้าว - เจ้าของโรงสี</title>
+    <link rel="stylesheet" href="/css/output.css">
+</head>
+<body class="min-h-screen relative bg-gradient-to-r from-field-600 via-field-700 to-sky-600">
+    <!--
+        ตรวจสอบคำขอการสีข้าว (Owner)
+        - ตารางจะแสดงคำขอการสีข้าวจากฐานข้อมูล โดย JS จะ fetch จาก API แล้ว render ลง #check-rows
+        - แสดงข้อมูลคำขอการสีข้าวของโรงสีนี้ โดยจัดกลุ่มตามโรงสี
+        - ปุ่ม “จัดการ” ในแต่ละแถวใช้ event delegation ใน /js/owner-check.js
+        - #toast-container ใช้แสดงผลลัพธ์/ข้อความแจ้งเตือน
+    -->
+    <!-- พื้นหลังแบบ hero (เหมือนหน้า index): รูปภาพจาง ๆ อยู่หลังเนื้อหา -->
+    <img src="/images/rice-mill-hero.jpg" alt="" aria-hidden="true" class="pointer-events-none absolute inset-0 z-0 h-full w-full object-cover opacity-20">
+
+    <main class="relative z-10 min-h-screen">
+        <section class="container-custom py-8">
+            <div class="overflow-hidden rounded-lg">
+                <div class="bg-field-700 text-white px-4 py-3">
+                    <div class="flex items-center justify-between gap-3">
+                        <div class="font-semibold">ตรวจสอบคำขอการสีข้าว</div>
+                        <a href="/owner-dashboard.html" class="btn-secondary px-4 py-2">กลับไปแดชบอร์ด</a>
+                    </div>
+                </div>
+
+                <div class="p-4 md:p-6">
+                    <div class="card overflow-x-auto">
+                        <table class="min-w-full text-sm text-gray-900 border-collapse">
+                            <thead>
+                                <tr class="bg-grain-50">
+                                    <th class="border border-gray-300 px-3 py-2 text-left w-16">ลำดับ</th>
+                                    <th class="border border-gray-300 px-3 py-2 text-left">ชื่อเจ้าของข้าว</th>
+                                    <th class="border border-gray-300 px-3 py-2 text-left">เบอร์โทร</th>
+                                    <th class="border border-gray-300 px-3 py-2 text-left">ประเภทข้าว</th>
+                                    <th class="border border-gray-300 px-3 py-2 text-left">จำนวนกระสอบ</th>
+                                    <th class="border border-gray-300 px-3 py-2 text-left">สถานะ</th>
+                                    <th class="border border-gray-300 px-3 py-2 text-left">ผลตรวจสอบ</th>
+                                    <th class="border border-gray-300 px-3 py-2 text-left w-64">จัดการ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="check-rows"></tbody>
+                        </table>
+                    </div>
+
+                    <div id="check-empty" class="hidden mt-4 text-sm text-gray-600">ยังไม่มีรายการ</div>
+
+                    <div class="mt-4 flex items-center justify-end"></div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div id="toast-container"></div>
+
+    <!-- main.js: utility/toast (FormUtils) -->
+    <script src="/js/main.js"></script>
+    <!-- owner-check.js: โหลดรายการคำขอ + render ตาราง + เรียก API เพื่อ update/cancel/delete -->
+    <script src="/js/owner-check.js" defer></script>
+</body>
+</html>
+

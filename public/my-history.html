@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ประวัติการสีข้าว">
+    <title>ประวัติการสีข้าวของฉัน</title>
+    <link rel="stylesheet" href="/css/output.css">
+</head>
+<body class="min-h-screen relative bg-gradient-to-r from-field-600 via-field-700 to-sky-600">
+    <img src="/images/rice-mill-hero.jpg" alt="" aria-hidden="true" class="pointer-events-none absolute inset-0 z-0 h-full w-full object-cover opacity-20">
+
+    <main class="relative z-10 min-h-screen">
+        <section class="container-custom py-8">
+            <div class="overflow-hidden rounded-lg">
+                <div class="bg-field-700 text-white px-4 py-3">
+                    <div class="flex items-center justify-between gap-3">
+                        <div class="font-semibold">ประวัติการสีข้าวของฉัน</div>
+                        <a href="/" class="btn-secondary px-4 py-2">กลับหน้าแรก</a>
+                    </div>
+                    <div class="text-xs text-white/90 mt-1">รายการคำขอสีข้าวทั้งหมดที่คุณส่งเข้ามา</div>
+                </div>
+                <div class="p-4">
+                    <div class="card overflow-x-auto">
+                        <table class="min-w-full text-sm text-slate-800 border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50">
+                                    <th class="border border-slate-300 px-3 py-2 text-left w-16">ลำดับ</th>
+                                    <th class="border border-slate-300 px-3 py-2 text-left">โรงสี</th>
+                                    <th class="border border-slate-300 px-3 py-2 text-left">ชนิดข้าว</th>
+                                    <th class="border border-slate-300 px-3 py-2 text-left">จำนวน (กระสอบ)</th>
+                                    <th class="border border-slate-300 px-3 py-2 text-left">วันส่ง</th>
+                                    <th class="border border-slate-300 px-3 py-2 text-left">สถานะ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="history-rows"></tbody>
+                        </table>
+                    </div>
+
+                    <div id="history-empty" class="hidden mt-4 text-center text-sm text-gray-600">
+                        ยังไม่มีประวัติการสีข้าว
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="/js/main.js"></script>
+    <script src="/js/my-history.js" defer></script>
+</body>
+</html>
+
