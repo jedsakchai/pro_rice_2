@@ -209,11 +209,8 @@ function renderNotifications(filterTab = 'all', typeFilter = 'all') {
                                     </div>
                                 </div>
                             </div>
-                                <div class="ml-4 flex items-center gap-2">
-                                    ${renderCancelButtonIfAllowed(item)}
-                                </div>
-                            </div>
-                        </a>
+                                    </div>
+                                </a>
                 `;
     }).join('\n');
 
@@ -248,105 +245,7 @@ function renderNotifications(filterTab = 'all', typeFilter = 'all') {
     });
 }
 
-function isCancelableByVillager(item) {
-    if (!item || !item.status) return false;
-    if (item.type === 'order') {
-        const ok = new Set(['pending','accepted','pending_payment','payment_review','paid','preparing']);
-        return ok.has(String(item.status));
-    }
-    if (item.type === 'milling') {
-        const ok = new Set(['pending_review','accepted','awaiting_pickup']);
-        return ok.has(String(item.status));
-    }
-    return false;
-}
-
-function renderCancelButtonIfAllowed(item) {
-    if (!isCancelableByVillager(item)) return '';
-    return `<button data-cancel-type="${item.type}" data-cancel-resource="${item.resource_id}" class="cancel-action-btn px-3 py-1.5 bg-red-50 text-red-700 rounded border border-red-100 text-sm">ยกเลิก</button>`;
-}
-
-// Cancel modal behavior
-const DEFAULT_CANCEL_CHOICES = ['เปลี่ยนใจ', 'พบราคาถูกกว่า', 'ต้องการแก้ไขข้อมูล/ที่อยู่', 'โรงสียังไม่สะดวก', 'อื่นๆ'];
-
-function openCancelModal(type, resourceId) {
-    const modal = document.getElementById('cancel-modal');
-    const choicesWrap = document.getElementById('cancel-choices');
-    const note = document.getElementById('cancel-note');
-    if (!modal || !choicesWrap || !note) return;
-    modal.dataset.type = type;
-    modal.dataset.resourceId = String(resourceId);
-    choicesWrap.innerHTML = '';
-    DEFAULT_CANCEL_CHOICES.forEach((c, idx) => {
-        const id = `cancel-choice-${idx}`;
-        const div = document.createElement('div');
-        div.innerHTML = `<label class="inline-flex items-center gap-2"><input type="checkbox" id="${id}" value="${c}" class="form-checkbox"> <span class="text-sm">${c}</span></label>`;
-        choicesWrap.appendChild(div);
-    });
-    note.value = '';
-    modal.classList.remove('hidden');
-}
-
-function closeCancelModal() {
-    const modal = document.getElementById('cancel-modal');
-    if (!modal) return;
-    modal.classList.add('hidden');
-    delete modal.dataset.type;
-    delete modal.dataset.resourceId;
-}
-
-document.addEventListener('click', (e) => {
-    const btn = e.target.closest && e.target.closest('.cancel-action-btn');
-    if (btn) {
-        e.preventDefault();
-        const type = btn.getAttribute('data-cancel-type');
-        const rid = btn.getAttribute('data-cancel-resource');
-        openCancelModal(type, rid);
-    }
-});
-
-document.addEventListener('DOMContentLoaded', () => {
-    // modal cancel/submit handlers
-    const modal = document.getElementById('cancel-modal');
-    if (!modal) return;
-    const cancelBtn = document.getElementById('cancel-cancel-btn');
-    cancelBtn?.addEventListener('click', (e) => { e.preventDefault(); closeCancelModal(); });
-
-    const form = document.getElementById('cancel-form');
-    form?.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const type = modal.dataset.type;
-        const resourceId = modal.dataset.resourceId;
-        const choices = Array.from(document.querySelectorAll('#cancel-choices input[type=checkbox]:checked')).map(i => i.value);
-        const note = document.getElementById('cancel-note')?.value || '';
-
-        try {
-            const session = window.OwnerSession?.get?.() || {};
-            const enc = (typeof window.btoa === 'function')
-                ? window.btoa(unescape(encodeURIComponent(JSON.stringify(session))))
-                : encodeURIComponent(JSON.stringify(session));
-
-            const resp = await fetch(`/api/notifications/${encodeURIComponent(type)}/${encodeURIComponent(resourceId)}/cancel`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'x-session-data': enc },
-                body: JSON.stringify({ choices, note })
-            });
-            const j = await resp.json();
-            if (j && j.success) {
-                window.dispatchEvent(new Event('notifications:changed'));
-                closeCancelModal();
-                // refresh list
-                await loadNotifications();
-                window.FormUtils.showToast('ยกเลิกเรียบร้อย', 'success');
-            } else {
-                window.FormUtils.showToast(j && j.message ? j.message : 'ไม่สามารถยกเลิกได้', 'error');
-            }
-        } catch (err) {
-            console.error('cancel failed', err);
-            window.FormUtils.showToast('เกิดข้อผิดพลาดขณะยกเลิก', 'error');
-        }
-    });
-});
+// Cancel controls moved to notification-detail page (compact list should not show cancel)
 
 function attachUIHandlers() {
     // Tabs
