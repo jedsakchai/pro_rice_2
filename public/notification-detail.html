@@ -345,7 +345,8 @@
               const status = resource.status || items[0]?.status;
               if (villagerId && Number(resource.villager_id || resource.submitted_by) === villagerId && allowedStatuses.includes(String(status))) {
                 const cancelBtn = document.createElement('button');
-                cancelBtn.className = 'mt-2 inline-block px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700';
+                cancelBtn.className = 'mt-4 inline-flex items-center justify-center gap-2 px-5 py-2 border-2 border-purple-700 text-purple-700 font-semibold rounded-md bg-white';
+                cancelBtn.style.minWidth = '140px';
                 cancelBtn.textContent = 'ยกเลิก';
                 cancelBtn.addEventListener('click', () => {
                   openCancelModal(type, resourceId);
@@ -373,28 +374,28 @@
         modal.className = 'fixed inset-0 z-50 flex items-center justify-center bg-black/40';
         modal.innerHTML = `
           <div class="bg-white rounded-lg p-6 w-full max-w-lg">
-            <h2 class="text-lg font-semibold mb-3">เลือกเหตุผลที่ต้องการยกเลิก</h2>
+            <h2 class="text-2xl font-semibold mb-4 text-green-800">เลือกเหตุผลที่ต้องการยกเลิก</h2>
             <form id="cancel-form">
-              <div id="cancel-choices" class="grid grid-cols-1 gap-2 mb-3"></div>
-              <div class="mb-3">
-                <label class="block text-sm font-medium mb-1">หมายเหตุ (เพิ่มเติม)</label>
-                <textarea id="cancel-note" class="w-full border rounded p-2" rows="3" placeholder="ระบุรายละเอียดเพิ่มเติม (ไม่บังคับ)"></textarea>
+              <div id="cancel-choices" class="grid grid-cols-1 gap-3 mb-4"></div>
+              <div class="mb-4">
+                <label class="block text-sm font-medium mb-2">หมายเหตุ (เพิ่มเติม)</label>
+                <textarea id="cancel-note" class="w-full border rounded p-3 text-sm" rows="4" placeholder="ระบุรายละเอียดเพิ่มเติม (ไม่บังคับ)"></textarea>
               </div>
-              <div class="flex justify-between">
-                <button type="submit" id="cancel-submit-btn" class="px-4 py-2 bg-rice-700 text-white rounded">ส่งคำขอยกเลิก</button>
-                <button type="button" id="cancel-close-btn" class="px-4 py-2 border rounded">ปิด</button>
+              <div class="flex justify-between items-center">
+                <button type="submit" id="cancel-submit-btn" class="px-6 py-2 bg-purple-700 text-white font-semibold rounded-md">ส่งคำขอยกเลิก</button>
+                <button type="button" id="cancel-close-btn" class="px-6 py-2 border-4 border-purple-700 text-purple-700 font-semibold rounded-md">ปิด</button>
               </div>
             </form>
           </div>
         `;
         document.body.appendChild(modal);
 
-        // populate choices
+        // populate choices (larger labels for readability)
         const choicesWrap = modal.querySelector('#cancel-choices');
         DEFAULT_CANCEL_CHOICES.forEach((c, idx) => {
           const id = `cancel-choice-detail-${idx}`;
           const div = document.createElement('div');
-          div.innerHTML = `<label class="inline-flex items-center gap-2"><input type="checkbox" id="${id}" value="${c}" class="form-checkbox"> <span class="text-sm">${c}</span></label>`;
+          div.innerHTML = `<label class="inline-flex items-start gap-3"><input type="checkbox" id="${id}" value="${c}" class="mt-1 form-checkbox w-5 h-5"> <span class="text-lg leading-6">${c}</span></label>`;
           choicesWrap.appendChild(div);
         });
 
