@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>สถานะคำขอการสีข้าว</title>
+  <link rel="stylesheet" href="/css/output.css">
+</head>
+<body class="min-h-screen relative bg-gradient-to-r from-rice-700 to-rice-800">
+  <header class="sticky top-0 z-40 bg-white shadow-subtle">
+    <nav class="container-custom py-4 flex items-center justify-between">
+      <a href="/" class="flex items-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-field-600">
+        <span class="text-xl md:text-2xl font-bold text-field-700">โรงสีชุมชน</span>
+      </a>
+      <button id="mobile-menu-btn" class="md:hidden p-2 hover:bg-gray-100 rounded-lg" aria-label="เปิดเมนูมือถือ" aria-expanded="false">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+        </svg>
+      </button>
+    </nav>
+    <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-grain-200">
+      <ul class="container-custom py-4 space-y-2"></ul>
+    </div>
+  </header>
+
+  <main class="relative z-10 px-6 py-12">
+    <div class="max-w-3xl mx-auto">
+      <section class="card p-6">
+        <h1 class="text-lg font-semibold mb-4">สถานะคำขอการสีข้าว</h1>
+        <div id="milling-status-container">กำลังโหลด...</div>
+      </section>
+    </div>
+  </main>
+  
+  <script src="/js/main.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const q = new URLSearchParams(window.location.search);
+      const requestId = q.get('request_id');
+      const el = document.getElementById('milling-status-container');
+      if (!requestId) { el.innerHTML = '<div class="text-red-600">ไม่มีหมายเลขคำขอ</div>'; return; }
+      try {
+        const res = await fetch('/api/milling-requests/' + encodeURIComponent(requestId));
+        const json = await res.json();
+        if (!res.ok || !json.success) { el.innerHTML = '<div class="text-red-600">ไม่พบคำขอการสีข้าว</div>'; return; }
+        const req = json.data;
+        
+        const statusMap = {
+          pending_review: 'รอตรวจสอบ',
+          accepted: 'รับคำสั่งแล้ว',
+          awaiting_pickup: 'รอไปรับข้าว',
+          received: 'รับข้าวแล้ว',
+          queued: 'รอคิวสี',
+          milling: 'กำลังสีข้าว',
+          packing: 'กำลังแพ็ก',
+          ready: 'พร้อมรับ/จัดส่ง',
+          shipping: 'กำลังจัดส่ง',
+          delivered: 'ส่งมอบแล้ว',
+          cancelled: 'ยกเลิก'
+        };
+        
+        el.innerHTML = `
+          <div class="space-y-2">
+            <div><strong>หมายเลขคำขอ:</strong> #${req.request_id}</div>
+            <div><strong>โรงสี:</strong> ${req.mill_name_th || req.mill_name || '-'}</div>
+            <div><strong>ชนิดข้าว:</strong> ${req.rice_type || '-'}</div>
+            <div><strong>ชื่อลูกค้า:</strong> ${req.customer_name}</div>
+            <div><strong>เบอร์:</strong> ${req.phone}</div>
+            <div><strong>ที่อยู่:</strong> ${req.address}</div>
+            <div><strong>จำนวนกระสอบ:</strong> ${req.sacks} กระสอบ</div>
+            <div><strong>วันส่งขึ้น:</strong> ${req.dropoff_date}</div>
+            <div><strong>วันที่คาดว่าเสร็จ:</strong> ${req.expected_return_date}</div>
+            <div class="flex items-center gap-3 flex-nowrap overflow-x-auto"><strong class="shrink-0">สถานะ:</strong> <span class="font-semibold text-rice-700 shrink-0 whitespace-nowrap">${statusMap[req.status] || req.status || 'ไม่ทราบ'}</span><a href="/notification-detail.html?type=milling&resource_id=${encodeURIComponent(req.request_id)}" class="shrink-0 inline-flex items-center rounded-full border border-rice-700 px-3 py-1 text-sm font-semibold text-rice-700 whitespace-nowrap hover:bg-rice-50">ดูเพิ่มเติม</a></div>
+            <div><strong>หมายเหตุ:</strong> ${req.notes || '-'}</div>
+          </div>
+        `;
+        // Add cancel button for villager when allowed
+        try {
+          const session = window.OwnerSession?.get?.();
+          const villagerId = session?.villager_id ? Number(session.villager_id) : null;
+          const canCancel = villagerId && Number(req.submitted_by) === villagerId && ['pending_review','accepted','awaiting_pickup'].includes(String(req.status));
+          if (canCancel) {
+            const btn = document.createElement('button');
+            btn.textContent = 'ยกเลิกคำขอสีข้าว';
+            btn.className = 'mt-4 inline-block px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700';
+            btn.addEventListener('click', () => {
+              if (typeof openCancelModal === 'function') {
+                openCancelModal('milling', req.request_id);
+              } else if (confirm('ต้องการยกเลิกคำขอการสีข้าวใช่หรือไม่?')) {
+                // fallback to PUT to owner endpoint (less ideal)
+                fetch('/api/milling-requests/' + encodeURIComponent(req.request_id), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'cancelled' }) })
+                  .then(r=>r.json()).then(j=>{ if (j && j.success) { alert('ยกเลิกเรียบร้อย'); window.location.reload(); } else { alert('ยกเลิกไม่สำเร็จ'); } }).catch(e=>{ alert('ยกเลิกไม่สำเร็จ'); });
+              }
+            });
+            el.appendChild(btn);
+          }
+        } catch(e){ console.error(e); }
+      } catch (err) {
+        console.error(err);
+        el.innerHTML = '<div class="text-red-600">เกิดข้อผิดพลาด</div>';
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>แจ้งเตือน</title>
+    <link rel="stylesheet" href="/css/output.css">
+        <style>
+            #notification-list a { text-decoration: none; }
+            #notification-list .w-10 { width:40px; height:40px; }
+
+            .notif-page-wrap {
+                max-width: 80rem;
+                margin: 0 auto;
+                padding: 1.25rem 0.75rem 2rem;
+            }
+
+            .notif-toolbar {
+                display: flex;
+                align-items: flex-start;
+                justify-content: space-between;
+                gap: 0.75rem;
+                margin-bottom: 1rem;
+            }
+
+            .notif-tabs-wrap {
+                overflow: visible;
+            }
+
+            .notif-tabs {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 0.5rem;
+            }
+
+            .tab-btn {
+                white-space: normal;
+                text-align: center;
+                font-size: 0.85rem;
+                line-height: 1.2;
+                padding-left: 0.85rem;
+                padding-right: 0.85rem;
+                min-height: 3rem;
+            }
+
+            .notif-actions {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                flex-wrap: wrap;
+            }
+
+            .notif-actions select,
+            .notif-actions button {
+                min-height: 2.5rem;
+            }
+
+            .notif-item {
+                display: flex;
+                gap: 0.75rem;
+                align-items: flex-start;
+                background: #fff;
+                border: 1px solid #f3e5ab;
+                border-radius: 0.75rem;
+                padding: 0.85rem;
+            }
+
+            .notif-item-main {
+                flex: 1;
+                min-width: 0;
+            }
+
+            .notif-item-head {
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-start;
+                gap: 0.75rem;
+            }
+
+            .notif-title {
+                font-weight: 600;
+                color: #1f2937;
+                line-height: 1.35;
+                word-break: break-word;
+            }
+
+            .notif-meta {
+                text-align: right;
+                flex-shrink: 0;
+            }
+
+            .notif-date {
+                color: #6b7280;
+                font-size: 0.8rem;
+            }
+
+            .notif-detail {
+                margin-top: 0.5rem;
+                color: #4b5563;
+                font-size: 0.88rem;
+                line-height: 1.35;
+            }
+
+            @media (max-width: 768px) {
+                .notif-page-wrap {
+                    padding-top: 1rem;
+                }
+
+                .notif-page-title {
+                    font-size: 1.75rem;
+                    line-height: 2.1rem;
+                    margin-bottom: 1rem;
+                }
+
+                .notif-panel {
+                    padding: 0.85rem;
+                }
+
+                .notif-toolbar {
+                    flex-direction: column;
+                    align-items: stretch;
+                }
+
+                .notif-actions {
+                    display: grid;
+                    grid-template-columns: 1fr;
+                }
+
+                .notif-actions select,
+                .notif-actions button {
+                    width: 100%;
+                }
+
+                .notif-tabs {
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                }
+
+                .notif-item {
+                    gap: 0.6rem;
+                    padding: 0.7rem;
+                }
+
+                .notif-item-head {
+                    flex-direction: column;
+                    gap: 0.45rem;
+                }
+
+                .notif-meta {
+                    text-align: left;
+                    width: 100%;
+                }
+            }
+
+            @media (min-width: 640px) and (max-width: 1023px) {
+                .notif-tabs {
+                    grid-template-columns: repeat(3, minmax(0, 1fr));
+                }
+            }
+
+            @media (min-width: 1024px) {
+                .notif-tabs {
+                    grid-template-columns: repeat(5, minmax(0, 1fr));
+                }
+            }
+        </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header Navigation -->
+    <header class="sticky top-0 z-40 bg-white shadow-subtle">
+        <nav class="container-custom py-4 flex items-center justify-between">
+            <a href="/" class="flex items-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-field-600">
+                <span class="text-xl md:text-2xl font-bold text-field-700">โรงสีชุมชน</span>
+            </a>
+            <ul class="hidden md:flex gap-8 items-center">
+                <li><a href="/" class="text-field-700 font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-field-600">หน้าแรก</a></li>
+                <li><a href="/inquiry.html" class="text-gray-700 hover:text-field-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-field-600">สอบถาม</a></li>
+                <li><a href="/contact.html" class="text-gray-700 hover:text-field-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-field-600">ติดต่อ</a></li>
+            </ul>
+
+            <button id="mobile-menu-btn" class="md:hidden p-2 hover:bg-gray-100 rounded-lg" aria-label="เปิดเมนูมือถือ" aria-expanded="false">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+            </button>
+        </nav>
+
+        <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-grain-200">
+            <ul class="container-custom py-4 space-y-2">
+                <li><a href="/" class="block py-2 text-field-700 font-semibold">หน้าแรก</a></li>
+                <li><a href="/inquiry.html" class="block py-2 text-gray-700 hover:text-field-700">สอบถาม</a></li>
+                <li><a href="/contact.html" class="block py-2 text-gray-700 hover:text-field-700">ติดต่อ</a></li>
+            </ul>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="notif-page-wrap">
+        <h1 class="notif-page-title text-4xl font-bold text-rice-700 mb-6">แจ้งเตือน</h1>
+
+        <div class="notif-panel bg-white rounded-xl shadow p-6">
+            <div class="notif-toolbar">
+                <div class="flex items-center gap-4">
+                    <div class="notif-tabs-wrap">
+                    <nav class="notif-tabs" id="notif-tabs" role="tablist" aria-label="Notification tabs">
+                        <button data-tab="all" class="tab-btn px-4 py-2 rounded-full bg-field-700 text-white font-semibold">ทั้งหมด <span id="count-all" class="ml-2 inline-block bg-white text-field-700 px-2 py-0.5 rounded-full text-sm">0</span></button>
+                        <button data-tab="check" class="tab-btn px-4 py-2 rounded-full border border-grain-200">รอการตรวจสอบ <span id="count-check" class="ml-2 inline-block bg-white text-gray-700 px-2 py-0.5 rounded-full text-sm">0</span></button>
+                        <button data-tab="in_progress" class="tab-btn px-4 py-2 rounded-full border border-grain-200">กำลังดำเนินการ <span id="count-in_progress" class="ml-2 inline-block bg-white text-gray-700 px-2 py-0.5 rounded-full text-sm">0</span></button>
+                        <button data-tab="shipping" class="tab-btn px-4 py-2 rounded-full border border-grain-200">กำลังจัดส่ง/กำลังส่งสินค้า <span id="count-shipping" class="ml-2 inline-block bg-white text-gray-700 px-2 py-0.5 rounded-full text-sm">0</span></button>
+                    </nav>
+                    </div>
+                </div>
+
+                <div class="notif-actions">
+                    <select id="status-filter" class="border rounded px-3 py-2 text-sm">
+                        <option value="all">ตัวกรองสถานะ</option>
+                        <option value="order">คำสั่งซื้อ</option>
+                        <option value="milling">คำขอสีข้าว</option>
+                    </select>
+                    <button id="mark-all-read" class="px-3 py-2 bg-rice-700 text-white rounded">ทำเครื่องหมายทั้งหมดว่าอ่านแล้ว</button>
+                </div>
+            </div>
+
+            <div id="notification-list" class="space-y-4">
+                <div class="text-center text-gray-600 py-12">กำลังโหลด...</div>
+            </div>
+
+            <div class="mt-6 text-sm text-gray-500">รายการในหน้านี้จะแสดงเฉพาะคำสั่งซื้อ/คำขอที่ยังไม่เสร็จสิ้นหรือมีการเปลี่ยนสถานะล่าสุด</div>
+        </div>
+    </div>
+
+            <!-- Cancel modal (hidden) -->
+            <div id="cancel-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+                <div class="bg-white rounded-lg p-6 w-full max-w-lg">
+                    <h2 class="text-lg font-semibold mb-3">เลือกเหตุผลที่ต้องการยกเลิก</h2>
+                    <form id="cancel-form">
+                        <div id="cancel-choices" class="grid grid-cols-1 gap-2 mb-3"></div>
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium mb-1">หมายเหตุ (เพิ่มเติม)</label>
+                            <textarea id="cancel-note" class="w-full border rounded p-2" rows="3" placeholder="ระบุรายละเอียดเพิ่มเติม (ไม่บังคับ)"></textarea>
+                        </div>
+                        <div class="flex justify-end gap-2">
+                            <button type="button" id="cancel-cancel-btn" class="px-4 py-2 border rounded">ยกเลิก</button>
+                            <button type="submit" id="cancel-confirm-btn" class="px-4 py-2 bg-red-600 text-white rounded">ยืนยันยกเลิก</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <script src="/js/main.js"></script>
+            <script src="/js/notifications.js"></script>
+</body>
+</html>
