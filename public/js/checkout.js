@@ -22,6 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const paymentRadios = Array.from(document.querySelectorAll('input[name="payment_method"]'));
   const bankInfo = document.getElementById('bank-info');
   const promptpayInfo = document.getElementById('promptpay-info');
+  const paymentWarning = document.getElementById('payment-warning');
   const slipInput = document.getElementById('payment_slip');
   const slipPreview = document.getElementById('slip_preview');
   const orderNote = document.getElementById('order_note');
@@ -196,11 +197,33 @@ document.addEventListener('DOMContentLoaded', () => {
   // Show/hide payment sections
   function updatePaymentUI(){
     const pm = (document.querySelector('input[name="payment_method"]:checked') || {}).value || 'bank_transfer';
-    if (pm === 'bank_transfer') { bankInfo.classList.remove('hidden'); promptpayInfo.classList.add('hidden'); }
-    else if (pm === 'promptpay') { bankInfo.classList.add('hidden'); promptpayInfo.classList.remove('hidden'); }
-    else { bankInfo.classList.add('hidden'); promptpayInfo.classList.add('hidden'); }
+    const hidePaymentDetails = () => {
+      if (bankInfo) bankInfo.style.display = 'none';
+      if (promptpayInfo) promptpayInfo.style.display = 'none';
+      if (slipInput) slipInput.value = '';
+      if (slipPreview) slipPreview.textContent = '';
+    };
+
+    if (pm === 'bank_transfer' || pm === 'promptpay') {
+      hidePaymentDetails();
+      if (paymentWarning) paymentWarning.style.display = 'block';
+
+      if (pm === 'promptpay' && promptpayInfo) {
+        promptpayInfo.style.display = 'none';
+      }
+
+      // Keep QR element hidden explicitly when present.
+      const qrImg = document.querySelector('#promptpay-info img');
+      if (qrImg) qrImg.style.display = 'none';
+    } else {
+      if (paymentWarning) paymentWarning.style.display = 'none';
+      if (bankInfo) bankInfo.style.display = 'none';
+      if (promptpayInfo) promptpayInfo.style.display = 'none';
+      if (slipInput) slipInput.value = '';
+      if (slipPreview) slipPreview.textContent = '';
+    }
   }
-  paymentRadios.forEach(r => r.addEventListener('change', updatePaymentUI));
+  paymentRadios.forEach((r) => r.addEventListener('change', updatePaymentUI));
   updatePaymentUI();
 
   slipInput?.addEventListener('change', () => {

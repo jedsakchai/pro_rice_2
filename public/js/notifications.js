@@ -183,7 +183,7 @@ function renderNotifications(filterTab = 'all', typeFilter = 'all') {
         const date = formatDate(item.created_at);
         const unreadDot = item.is_read ? '' : '<span class="inline-block w-3 h-3 bg-rice-700 rounded-full mr-3"></span>';
 
-        const label = 'สถานะการคำขอสีข้าว/คำสั่งซื้อ:';
+        const label = item.type === 'order' ? 'สถานะการคำสั่งซื้อ:' : 'สถานะการคำขอสีข้าว:';
         const note = 'คลิกเพื่อดูรายละเอียด';
         const statusLabel = statusInfo.th;
 
