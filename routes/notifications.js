@@ -36,6 +36,235 @@ function dedupeLatestByThread(rows) {
   return list;
 }
 
+const CANCELLATION_STATUS_LABELS = {
+  pending_cancel: 'รอยืนยันการยกเลิก',
+  approved_cancel: 'ยกเลิกสำเร็จแล้ว',
+  rejected_cancel: 'ปฏิเสธคำขอยกเลิก',
+};
+
+const CANCELLATION_CONFIG = {
+  order: {
+    table: 'orders',
+    idColumn: 'order_id',
+    ownerColumn: 'villager_id',
+    millColumn: 'mill_id',
+    cancelableStatuses: new Set(['pending', 'accepted', 'pending_payment', 'payment_review', 'paid', 'preparing']),
+    typeLabel: 'คำสั่งซื้อ',
+  },
+  milling: {
+    table: 'milling_requests',
+    idColumn: 'request_id',
+    ownerColumn: 'submitted_by',
+    millColumn: 'mill_id',
+    cancelableStatuses: new Set(['pending_review', 'accepted', 'awaiting_pickup']),
+    typeLabel: 'คำขอสีข้าว',
+  },
+};
+
+function normalizeCancellationType(type) {
+  const value = String(type || '').trim();
+  return value === 'order' || value === 'milling' ? value : null;
+}
+
+function normalizeCancellationStatus(status) {
+  const value = String(status || '').trim();
+  return ['pending_cancel', 'approved_cancel', 'rejected_cancel'].includes(value) ? value : null;
+}
+
+function cancellationLabel(status) {
+  return CANCELLATION_STATUS_LABELS[status] || status || '-';
+}
+
+function parseCancellationReasons(value) {
+  if (!value) return [];
+  if (Array.isArray(value)) return value;
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed : [String(value)];
+  } catch {
+    return String(value)
+      .split(/[,|]/)
+      .map((part) => part.trim())
+      .filter(Boolean);
+  }
+}
+
+function stringifyCancellationReasons(choices) {
+  return JSON.stringify(Array.isArray(choices) ? choices : []);
+}
+
+function buildCancellationMessage(status) {
+  return cancellationLabel(status);
+}
+
+async function loadCancellationResource(conn, type, resourceId) {
+  const config = CANCELLATION_CONFIG[type];
+  if (!config) return null;
+
+  const [rows] = await conn.query(
+    `SELECT ${config.idColumn} AS resource_id, ${config.ownerColumn} AS owner_id, ${config.millColumn} AS mill_id, status
+     FROM ${config.table}
+     WHERE ${config.idColumn} = ?
+     LIMIT 1`,
+    [resourceId]
+  );
+
+  return rows && rows[0] ? rows[0] : null;
+}
+
+async function upsertCancellationNotification(conn, villagerId, type, resourceId, status) {
+  await conn.execute(
+    'INSERT INTO notifications (villager_id, type, resource_id, status, message) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE status = VALUES(status), message = VALUES(message), is_read = FALSE, created_at = CURRENT_TIMESTAMP',
+    [villagerId, type, resourceId, status, buildCancellationMessage(status)]
+  );
+}
+
+async function createCancellationRequest(conn, { type, resourceId, villagerId, choices, additionalNote }) {
+  const normalizedType = normalizeCancellationType(type);
+  const resourceIdValue = Number(resourceId);
+  const villagerIdValue = Number(villagerId);
+
+  if (!normalizedType || !Number.isFinite(resourceIdValue) || !Number.isFinite(villagerIdValue)) {
+    const error = new Error('Invalid request');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const config = CANCELLATION_CONFIG[normalizedType];
+  const resource = await loadCancellationResource(conn, normalizedType, resourceIdValue);
+  if (!resource) {
+    const error = new Error('Resource not found');
+    error.statusCode = 404;
+    throw error;
+  }
+
+  if (Number(resource.owner_id) !== villagerIdValue) {
+    const error = new Error('Forbidden');
+    error.statusCode = 403;
+    throw error;
+  }
+
+  if (!config.cancelableStatuses.has(String(resource.status || '').trim())) {
+    const error = new Error(`${config.typeLabel} cannot be cancelled at this stage`);
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const parsedChoices = parseCancellationReasons(choices);
+  if (parsedChoices.length === 0) {
+    const error = new Error('Please select at least one reason');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const reasonText = stringifyCancellationReasons(parsedChoices);
+  const noteText = String(additionalNote || '').trim();
+
+  await conn.execute(
+    `INSERT INTO cancellation_requests (order_id, milling_request_id, user_id, cancellation_reason, additional_note, status)
+     VALUES (?, ?, ?, ?, ?, 'pending_cancel')
+     ON DUPLICATE KEY UPDATE
+       user_id = VALUES(user_id),
+       cancellation_reason = VALUES(cancellation_reason),
+       additional_note = VALUES(additional_note),
+       status = 'pending_cancel',
+       updated_at = CURRENT_TIMESTAMP`,
+    [normalizedType === 'order' ? resourceIdValue : null, normalizedType === 'milling' ? resourceIdValue : null, villagerIdValue, reasonText, noteText || null]
+  );
+
+  const [rows] = await conn.query(
+    `SELECT id, order_id, milling_request_id, user_id, cancellation_reason, additional_note, status, created_at, updated_at
+     FROM cancellation_requests
+     WHERE ${normalizedType === 'order' ? 'order_id' : 'milling_request_id'} = ?
+     LIMIT 1`,
+    [resourceIdValue]
+  );
+
+  const request = rows && rows[0] ? rows[0] : null;
+  if (!request) {
+    const error = new Error('Unable to create cancellation request');
+    error.statusCode = 500;
+    throw error;
+  }
+
+  await upsertCancellationNotification(conn, villagerIdValue, normalizedType, resourceIdValue, 'pending_cancel');
+
+  return {
+    ...request,
+    type: normalizedType,
+    reason_choices: parseCancellationReasons(request.cancellation_reason),
+  };
+}
+
+async function updateCancellationRequestStatus(conn, { cancellationId, status, ownerId }) {
+  const normalizedStatus = normalizeCancellationStatus(status);
+  const cancellationIdValue = Number(cancellationId);
+  const ownerIdValue = Number(ownerId);
+
+  if (!normalizedStatus || !Number.isFinite(cancellationIdValue) || !Number.isFinite(ownerIdValue)) {
+    const error = new Error('Invalid request');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const [rows] = await conn.query(
+    `SELECT id, order_id, milling_request_id, user_id, cancellation_reason, additional_note, status, created_at, updated_at
+     FROM cancellation_requests
+     WHERE id = ?
+     LIMIT 1`,
+    [cancellationIdValue]
+  );
+
+  const request = rows && rows[0] ? rows[0] : null;
+  if (!request) {
+    const error = new Error('Cancellation request not found');
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const type = request.order_id ? 'order' : 'milling';
+  const resourceId = request.order_id || request.milling_request_id;
+  const resource = await loadCancellationResource(conn, type, resourceId);
+  if (!resource) {
+    const error = new Error('Resource not found');
+    error.statusCode = 404;
+    throw error;
+  }
+
+  if (Number(resource.mill_id || 0) !== ownerIdValue) {
+    const error = new Error('Forbidden');
+    error.statusCode = 403;
+    throw error;
+  }
+
+  await conn.execute(
+    'UPDATE cancellation_requests SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+    [normalizedStatus, cancellationIdValue]
+  );
+
+  if (normalizedStatus === 'approved_cancel') {
+    const reasonText = JSON.stringify({
+      reasons: parseCancellationReasons(request.cancellation_reason),
+      additional_note: request.additional_note || '',
+    });
+
+    if (type === 'order') {
+      await conn.execute('UPDATE orders SET status = ?, cancel_reason = ?, cancelled_at = CURRENT_TIMESTAMP WHERE order_id = ?', ['cancelled', reasonText, resourceId]);
+    } else {
+      await conn.execute('UPDATE milling_requests SET status = ?, cancel_reason = ?, cancelled_at = CURRENT_TIMESTAMP WHERE request_id = ?', ['cancelled', reasonText, resourceId]);
+    }
+  }
+
+  await upsertCancellationNotification(conn, Number(request.user_id || 0), type, resourceId, normalizedStatus);
+
+  return {
+    ...request,
+    type,
+    status: normalizedStatus,
+    reason_choices: parseCancellationReasons(request.cancellation_reason),
+  };
+}
+
 // GET /api/notifications/count — ดึงจำนวนการแจ้งเตือนที่ยังไม่ได้อ่าน
 router.get('/count', async (req, res) => {
     try {
@@ -260,6 +489,113 @@ router.post('/mark-all-read', async (req, res) => {
   }
 });
 
+// GET /api/notifications/cancellations/:type/:resourceId — fetch the current cancellation request
+router.get('/cancellations/:type/:resourceId', async (req, res) => {
+  try {
+    const session = parseSessionFromHeader(req);
+    const type = normalizeCancellationType(req.params.type);
+    const resourceId = Number(req.params.resourceId);
+    if (!type || !Number.isFinite(resourceId)) {
+      return res.status(400).json({ success: false, message: 'Invalid request' });
+    }
+
+    const conn = await pool.getConnection();
+    try {
+      const resource = await loadCancellationResource(conn, type, resourceId);
+      if (!resource) return res.status(404).json({ success: false, message: 'Resource not found' });
+
+      const villagerId = Number(session?.villager_id || 0);
+      const ownerId = Number(resource.owner_id || 0);
+      const isOwner = session?.role === 'owner' && Number(session?.mill_id || 0) === Number(resource.mill_id || 0);
+      if (!isOwner && (!villagerId || villagerId !== ownerId)) {
+        return res.status(403).json({ success: false, message: 'Forbidden' });
+      }
+
+      const columnName = type === 'order' ? 'order_id' : 'milling_request_id';
+      const [rows] = await conn.query(
+        `SELECT id, order_id, milling_request_id, user_id, cancellation_reason, additional_note, status, created_at, updated_at
+         FROM cancellation_requests
+         WHERE ${columnName} = ?
+         ORDER BY created_at DESC, id DESC
+         LIMIT 1`,
+        [resourceId]
+      );
+
+      return res.json({ success: true, data: rows && rows[0] ? {
+        ...rows[0],
+        type,
+        reason_choices: parseCancellationReasons(rows[0].cancellation_reason),
+        status_label: cancellationLabel(rows[0].status),
+      } : null });
+    } finally {
+      try { conn.release(); } catch (e) { /* ignore */ }
+    }
+  } catch (err) {
+    console.error('get cancellation status error:', err);
+    return res.status(err.statusCode || 500).json({ success: false, message: err.message || 'Unable to load cancellation status' });
+  }
+});
+
+// POST /api/notifications/cancellations — create a new cancellation request
+router.post('/cancellations', async (req, res) => {
+  try {
+    const session = parseSessionFromHeader(req);
+    const villagerId = Number(session?.villager_id || 0);
+    if (!villagerId) return res.status(401).json({ success: false, message: 'Unauthorized' });
+
+    const payload = req.body || {};
+    const conn = await pool.getConnection();
+    try {
+      const created = await createCancellationRequest(conn, {
+        type: payload.type,
+        resourceId: payload.resource_id,
+        villagerId,
+        choices: payload.choices,
+        additionalNote: payload.additional_note,
+      });
+
+      return res.json({ success: true, data: created });
+    } finally {
+      try { conn.release(); } catch (e) { /* ignore */ }
+    }
+  } catch (err) {
+    console.error('create cancellation request error:', err);
+    return res.status(err.statusCode || 500).json({ success: false, message: err.message || 'Unable to create cancellation request' });
+  }
+});
+
+// PATCH /api/notifications/cancellations/:id/status — owner/admin update
+router.patch('/cancellations/:id/status', async (req, res) => {
+  try {
+    const session = parseSessionFromHeader(req);
+    if (session?.role !== 'owner') {
+      return res.status(403).json({ success: false, message: 'Forbidden' });
+    }
+
+    const ownerMillId = Number(session?.mill_id || 0);
+    if (!ownerMillId) {
+      return res.status(401).json({ success: false, message: 'Unauthorized' });
+    }
+
+    const payload = req.body || {};
+    const conn = await pool.getConnection();
+    try {
+      const updated = await updateCancellationRequestStatus(conn, {
+        cancellationId: req.params.id,
+        status: payload.status,
+        ownerId: ownerMillId,
+      });
+
+      return res.json({ success: true, data: updated });
+    } finally {
+      try { conn.release(); } catch (e) { /* ignore */ }
+    }
+  } catch (err) {
+    console.error('update cancellation status error:', err);
+    return res.status(err.statusCode || 500).json({ success: false, message: err.message || 'Unable to update cancellation status' });
+  }
+});
+
 // GET /api/notifications/:type/:resourceId/timeline — show full status timeline for a thread
 router.get('/:type/:resourceId/timeline', async (req, res) => {
   try {
@@ -295,79 +631,29 @@ router.get('/:type/:resourceId/timeline', async (req, res) => {
   }
 });
 
-// POST /api/notifications/:type/:resourceId/cancel — allow villager to cancel their order/milling
+// POST /api/notifications/:type/:resourceId/cancel — compatibility wrapper
 router.post('/:type/:resourceId/cancel', async (req, res) => {
   try {
     const session = parseSessionFromHeader(req);
-    const villager_id = session?.villager_id || null;
-    if (!villager_id) return res.status(401).json({ success: false, message: 'Unauthorized' });
-
-    const type = String(req.params.type || '').trim();
-    const resourceId = Number(req.params.resourceId);
-    if (!['order','milling'].includes(type) || !Number.isFinite(resourceId)) {
-      return res.status(400).json({ success: false, message: 'Invalid request' });
-    }
-
-    const payload = req.body || {};
-    const choices = Array.isArray(payload.choices) ? payload.choices.map(String) : [];
-    const note = payload.note ? String(payload.note).trim() : '';
+    const villagerId = Number(session?.villager_id || 0);
+    if (!villagerId) return res.status(401).json({ success: false, message: 'Unauthorized' });
 
     const conn = await pool.getConnection();
     try {
-      if (type === 'order') {
-        // verify ownership
-        const [rows] = await conn.execute('SELECT villager_id, status FROM orders WHERE order_id = ? LIMIT 1', [resourceId]);
-        const order = rows && rows[0];
-        if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
-        if (Number(order.villager_id) !== Number(villager_id)) return res.status(403).json({ success: false, message: 'Forbidden' });
+      const created = await createCancellationRequest(conn, {
+        type: req.params.type,
+        resourceId: req.params.resourceId,
+        villagerId,
+        choices: req.body?.choices,
+        additionalNote: req.body?.note,
+      });
 
-        const cancelable = new Set(['pending','accepted','pending_payment','payment_review','paid','preparing']);
-        if (!cancelable.has(String(order.status || ''))) {
-          return res.status(400).json({ success: false, message: 'Order cannot be cancelled at this stage' });
-        }
-
-        const reasonParts = [];
-        if (choices.length) reasonParts.push(`ตัวเลือก: ${choices.join(', ')}`);
-        if (note) reasonParts.push(`หมายเหตุ: ${note}`);
-        const reasonText = reasonParts.length ? (`ยกเลิกโดยลูกค้า — ${reasonParts.join(' | ')}`) : 'ยกเลิกโดยลูกค้า';
-
-        await conn.execute('UPDATE orders SET status = ?, cancel_reason = ?, cancelled_at = CURRENT_TIMESTAMP WHERE order_id = ?', ['cancelled', reasonText, resourceId]);
-
-        await conn.execute(
-          'INSERT INTO notifications (villager_id, type, resource_id, status, message) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE status = VALUES(status), message = VALUES(message), is_read = FALSE, created_at = CURRENT_TIMESTAMP',
-          [villager_id, 'order', resourceId, 'cancelled', reasonText]
-        );
-        return res.json({ success: true });
-      }
-
-      // milling
-      const [mrows] = await conn.execute('SELECT submitted_by, status FROM milling_requests WHERE request_id = ? LIMIT 1', [resourceId]);
-      const mreq = mrows && mrows[0];
-      if (!mreq) return res.status(404).json({ success: false, message: 'Request not found' });
-      if (Number(mreq.submitted_by) !== Number(villager_id)) return res.status(403).json({ success: false, message: 'Forbidden' });
-
-      const millingCancelable = new Set(['pending_review','accepted','awaiting_pickup']);
-      if (!millingCancelable.has(String(mreq.status || ''))) {
-        return res.status(400).json({ success: false, message: 'Milling request cannot be cancelled at this stage' });
-      }
-
-      const reasonParts = [];
-      if (choices.length) reasonParts.push(`ตัวเลือก: ${choices.join(', ')}`);
-      if (note) reasonParts.push(`หมายเหตุ: ${note}`);
-      const reasonText = reasonParts.length ? (`ยกเลิกโดยลูกค้า — ${reasonParts.join(' | ')}`) : 'ยกเลิกโดยลูกค้า';
-
-      await conn.execute('UPDATE milling_requests SET status = ?, cancel_reason = ?, cancelled_at = CURRENT_TIMESTAMP WHERE request_id = ?', ['cancelled', reasonText, resourceId]);
-
-      await conn.execute(
-        'INSERT INTO notifications (villager_id, type, resource_id, status, message) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE status = VALUES(status), message = VALUES(message), is_read = FALSE, created_at = CURRENT_TIMESTAMP',
-        [villager_id, 'milling', resourceId, 'cancelled', reasonText]
-      );
-      return res.json({ success: true });
+      return res.json({ success: true, data: created });
     } finally {
-      try { if (conn) conn.release(); } catch (e) { /* ignore */ }
+      try { conn.release(); } catch (e) { /* ignore */ }
     }
   } catch (err) {
     console.error('cancel notification error:', err);
-    return res.status(500).json({ success: false, message: String(err && err.message ? err.message : 'Unable to cancel'), stack: err && err.stack });
+    return res.status(err.statusCode || 500).json({ success: false, message: String(err && err.message ? err.message : 'Unable to cancel') });
   }
 });

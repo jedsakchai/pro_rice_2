@@ -52,7 +52,10 @@ function getStatusDisplay(type, status) {
         'ready_to_ship': { th: 'พร้อมจัดส่ง', color: 'blue' },
         'shipping': { th: 'จัดส่งแล้ว', color: 'green' },
         'completed': { th: 'สำเร็จ', color: 'green' },
-        'cancelled': { th: 'ยกเลิก', color: 'gray' }
+        'cancelled': { th: 'ยกเลิก', color: 'gray' },
+        'pending_cancel': { th: 'รอยืนยันการยกเลิก', color: 'orange' },
+        'approved_cancel': { th: 'ยกเลิกสำเร็จแล้ว', color: 'green' },
+        'rejected_cancel': { th: 'ปฏิเสธคำขอยกเลิก', color: 'red' }
     };
 
     const millingStatusMap = {
@@ -66,7 +69,10 @@ function getStatusDisplay(type, status) {
         'ready': { th: 'พร้อมรับ/จัดส่ง', color: 'blue' },
         'shipping': { th: 'กำลังจัดส่ง', color: 'blue' },
         'delivered': { th: 'ส่งมอบแล้ว', color: 'green' },
-        'cancelled': { th: 'ยกเลิก', color: 'gray' }
+        'cancelled': { th: 'ยกเลิก', color: 'gray' },
+        'pending_cancel': { th: 'รอยืนยันการยกเลิก', color: 'orange' },
+        'approved_cancel': { th: 'ยกเลิกสำเร็จแล้ว', color: 'green' },
+        'rejected_cancel': { th: 'ปฏิเสธคำขอยกเลิก', color: 'red' }
     };
 
     const statusMap = type === 'order' ? orderStatusMap : millingStatusMap;

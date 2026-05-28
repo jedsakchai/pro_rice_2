@@ -9,10 +9,18 @@ const root = path.join(__dirname, '..');
 const nodeExe = process.env.NODE_EXE || 'C:\\Program Files\\nodejs\\node.exe';
 
 async function main() {
-  const ngrokCmd = path.join(root, 'node_modules', 'ngrok', 'bin', 'ngrok.exe');
+  const ngrokCandidates = [
+    path.join(root, 'ngrok.exe'),
+    path.join(root, 'node_modules', 'ngrok', 'bin', 'ngrok.exe'),
+    'ngrok',
+  ];
+  const ngrokCmd = ngrokCandidates.find((candidate) => {
+    if (candidate === 'ngrok') return true;
+    return fs.existsSync(candidate);
+  });
   const ngrokConfig = path.join(root, 'ngrok.yml');
-  if (!fs.existsSync(ngrokCmd)) {
-    throw new Error(`ngrok binary not found at ${ngrokCmd}. Run npm install first.`);
+  if (!ngrokCmd) {
+    throw new Error('ngrok binary not found. Install ngrok or place ngrok.exe in the repo root.');
   }
 
   if (!process.env.NGROK_AUTHTOKEN || !String(process.env.NGROK_AUTHTOKEN).trim()) {

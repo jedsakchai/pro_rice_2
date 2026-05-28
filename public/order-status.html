@@ -70,66 +70,11 @@
             <div class="mt-2 space-y-2">${(o.items||[]).map(i=>`<div class="flex justify-between"><div>${i.product_name_th} x ${i.quantity}</div><div>฿${Number(i.subtotal).toFixed(2)}</div></div>`).join('')}</div>
           </div>
         `;
-        // Add cancel button for the ordering villager when allowed
-        try {
-          const session = window.OwnerSession?.get?.();
-          const villagerId = session?.villager_id ? Number(session.villager_id) : null;
-          const canCancel = villagerId && Number(o.villager_id) === villagerId && ['pending','accepted','pending_payment','payment_review','paid','preparing'].includes(String(o.status));
-          if (canCancel) {
-            const btn = document.createElement('button');
-            btn.textContent = 'ยกเลิกคำสั่งซื้อ';
-            btn.className = 'mt-4 inline-block px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700';
-            btn.addEventListener('click', async () => {
-              // open cancel modal implemented in /js/notifications.js
-              if (typeof openCancelModal === 'function') {
-                openCancelModal('order', o.order_id);
-              } else {
-                if (!confirm('ต้องการยกเลิกคำสั่งซื้อนี้ใช่หรือไม่?')) return;
-                try {
-                  btn.disabled = true;
-                  const resp = await fetch('/api/orders/' + encodeURIComponent(o.order_id), {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ status: 'cancelled' })
-                  });
-                  const j = await resp.json().catch(() => null);
-                  if (!resp.ok || !j || j.success !== true) {
-                    throw new Error((j && j.message) || 'ยกเลิกไม่สำเร็จ');
-                  }
-                  alert('ยกเลิกคำสั่งซื้อเรียบร้อยแล้ว');
-                  window.location.reload();
-                } catch (e) {
-                  console.error('Cancel failed', e);
-                  btn.disabled = false;
-                  alert(e.message || 'ยกเลิกไม่สำเร็จ');
-                }
-              }
-            });
-            el.appendChild(btn);
-          }
-        } catch (e) { console.error(e); }
       } catch (err) {
         console.error(err);
         el.innerHTML = '<div class="text-red-600">เกิดข้อผิดพลาด</div>';
       }
     });
   </script>
-    <!-- Cancel modal (reused from notifications page) -->
-    <div id="cancel-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div class="bg-white rounded-lg p-6 w-full max-w-lg">
-        <h2 class="text-lg font-semibold mb-3">เลือกเหตุผลที่ต้องการยกเลิก</h2>
-        <form id="cancel-form">
-          <div id="cancel-choices" class="grid grid-cols-1 gap-2 mb-3"></div>
-          <div class="mb-3">
-            <label class="block text-sm font-medium mb-1">หมายเหตุ (เพิ่มเติม)</label>
-            <textarea id="cancel-note" class="w-full border rounded p-2" rows="3" placeholder="ระบุรายละเอียดเพิ่มเติม (ไม่บังคับ)"></textarea>
-          </div>
-          <div class="flex justify-end gap-2">
-            <button type="button" id="cancel-cancel-btn" class="px-4 py-2 border rounded">ยกเลิก</button>
-            <button type="submit" id="cancel-confirm-btn" class="px-4 py-2 bg-red-600 text-white rounded">ยืนยันยกเลิก</button>
-          </div>
-        </form>
-      </div>
-    </div>
 </body>
 </html>

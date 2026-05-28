@@ -74,27 +74,6 @@
             <div><strong>หมายเหตุ:</strong> ${req.notes || '-'}</div>
           </div>
         `;
-        // Add cancel button for villager when allowed
-        try {
-          const session = window.OwnerSession?.get?.();
-          const villagerId = session?.villager_id ? Number(session.villager_id) : null;
-          const canCancel = villagerId && Number(req.submitted_by) === villagerId && ['pending_review','accepted','awaiting_pickup'].includes(String(req.status));
-          if (canCancel) {
-            const btn = document.createElement('button');
-            btn.textContent = 'ยกเลิกคำขอสีข้าว';
-            btn.className = 'mt-4 inline-block px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700';
-            btn.addEventListener('click', () => {
-              if (typeof openCancelModal === 'function') {
-                openCancelModal('milling', req.request_id);
-              } else if (confirm('ต้องการยกเลิกคำขอการสีข้าวใช่หรือไม่?')) {
-                // fallback to PUT to owner endpoint (less ideal)
-                fetch('/api/milling-requests/' + encodeURIComponent(req.request_id), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'cancelled' }) })
-                  .then(r=>r.json()).then(j=>{ if (j && j.success) { alert('ยกเลิกเรียบร้อย'); window.location.reload(); } else { alert('ยกเลิกไม่สำเร็จ'); } }).catch(e=>{ alert('ยกเลิกไม่สำเร็จ'); });
-              }
-            });
-            el.appendChild(btn);
-          }
-        } catch(e){ console.error(e); }
       } catch (err) {
         console.error(err);
         el.innerHTML = '<div class="text-red-600">เกิดข้อผิดพลาด</div>';
