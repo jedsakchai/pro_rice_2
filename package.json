@@ -12,6 +12,8 @@
     "db:seed": "node scripts/seed-db.js",
     "db:migrate:notifications:index": "node scripts/migrate-add-notifications-unique.js",
     "db:migrate:notifications:triggers": "node scripts/migrate-add-notifications-triggers.js",
+    "db:migrate:status-history": "node scripts/migrate-add-status-history.js",
+    "db:migrate:cancellation-resource-status": "node scripts/migrate-add-cancellation-resource-status.js",
     "db:cleanup:notifications": "node scripts/cleanup-notifications.js",
     "serve:static": "http-server public -p 3000 -c-1",
     "build:css": "tailwindcss -i ./public/css/input.css -o ./public/css/output.css",

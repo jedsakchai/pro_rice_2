@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
       ready_to_ship: 'พร้อมจัดส่ง',
       shipping: 'จัดส่งแล้ว',
       completed: 'สำเร็จ',
-      cancelled: 'ยกเลิก'
+      cancelled: 'ยกเลิกคำสั่งซื้อสินค้าแล้ว'
     };
     return map[status] || map[String(status || '').trim()] || status || '-';
   };
@@ -81,10 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <td class="border border-gray-300 px-3 py-2">${badge}</td>
           <td class="border border-gray-300 px-3 py-2 font-medium">${formatMoney(row.total)}</td>
           <td class="border border-gray-300 px-3 py-2">
-            <div class="flex flex-wrap gap-2">
-              <a href="/owner-orders-detail.html?id=${row.order_id}" class="btn-secondary px-3 py-1 text-xs">รายละเอียด</a>
-              <button type="button" data-action="quick-confirm" data-id="${row.order_id}" class="btn-primary px-3 py-1 text-xs">ยอมรับคำสั่งซื้อ</button>
-            </div>
+            <a href="/owner-orders-detail.html?id=${row.order_id}" class="btn-secondary px-3 py-1 text-xs inline-flex">รายละเอียด</a>
           </td>
         </tr>
       `;
@@ -116,40 +113,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  const updateOrder = async (id, payload) => {
-    const resp = await fetch(`/api/orders/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    const json = await resp.json().catch(() => null);
-    if (!resp.ok || !json || json.success !== true) {
-      throw new Error(json?.message || 'อัปเดตไม่สำเร็จ');
-    }
-    return json;
-  };
-
-  document.addEventListener('click', async (e) => {
-    const el = e.target;
-    if (!(el instanceof HTMLElement)) return;
-
-    const confirmBtn = el.closest('button[data-action="quick-confirm"]');
-    if (!confirmBtn) return;
-
-    const id = confirmBtn.getAttribute('data-id');
-    if (!id) return;
-
-    try {
-      confirmBtn.setAttribute('disabled', 'true');
-      await updateOrder(id, { status: 'accepted' });
-      toast('ยอมรับคำสั่งซื้อเรียบร้อย', 'success');
-      await fetchRows();
-    } catch (err) {
-      console.error(err);
-      confirmBtn.removeAttribute('disabled');
-      toast(err.message || 'ยืนยันไม่สำเร็จ', 'error');
-    }
-  });
-
   fetchRows();
+  setInterval(fetchRows, 15000);
 });

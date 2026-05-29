@@ -76,6 +76,28 @@
                 </select>
               </div>
 
+              <div id="cancel-reason-section" class="hidden space-y-3 rounded-lg border border-red-200 bg-red-50 p-4 max-w-xl">
+                <div class="font-semibold text-red-700">เหตุผลการยกเลิก</div>
+                <div class="grid gap-2 sm:grid-cols-2">
+                  <label class="flex items-center gap-2 text-sm text-red-800">
+                    <input type="checkbox" class="cancel-reason-option h-4 w-4 rounded border-red-300 text-red-600 focus:ring-red-500" value="ไม่สะดวกให้บริการ">
+                    ไม่สะดวกให้บริการ
+                  </label>
+                  <label class="flex items-center gap-2 text-sm text-red-800">
+                    <input type="checkbox" class="cancel-reason-option h-4 w-4 rounded border-red-300 text-red-600 focus:ring-red-500" value="สินค้าไม่พร้อม">
+                    สินค้าไม่พร้อม
+                  </label>
+                  <label class="flex items-center gap-2 text-sm text-red-800">
+                    <input type="checkbox" class="cancel-reason-option h-4 w-4 rounded border-red-300 text-red-600 focus:ring-red-500" value="ลูกค้าติดต่อไม่ได้">
+                    ลูกค้าติดต่อไม่ได้
+                  </label>
+                  <label class="flex items-center gap-2 text-sm text-red-800">
+                    <input type="checkbox" class="cancel-reason-option h-4 w-4 rounded border-red-300 text-red-600 focus:ring-red-500" value="อื่นๆ">
+                    อื่นๆ
+                  </label>
+                </div>
+              </div>
+
               <div class="flex items-center gap-4 pt-4">
                 <button id="btn-save" type="button" class="btn-primary px-8 py-2">บันทึก</button>
                 <a href="/owner-orders.html" class="btn-secondary px-8 py-2">ย้อนกลับ</a>

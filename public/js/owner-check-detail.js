@@ -21,6 +21,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const processStatusEl = document.getElementById('process-status');
     const cancelledHint = document.getElementById('cancelled-hint');
     const btnSave = document.getElementById('btn-save');
+    const cancelReasonSection = document.getElementById('cancel-reason-section');
+    const cancelReasonOptions = Array.from(document.querySelectorAll('.cancel-reason-option'));
 
     // toast สำหรับหน้านี้: ใช้ alert เป็นหลักเพื่อให้ผู้ใช้เห็นแน่นอน
     const toast = (message, type = 'success') => {
@@ -92,6 +94,25 @@ document.addEventListener('DOMContentLoaded', () => {
         if (btnSave) btnSave.disabled = disabled;
     };
 
+    const parseCancelReasons = (value) => {
+        if (!value) return [];
+        if (Array.isArray(value)) return value;
+        try {
+            const parsed = JSON.parse(value);
+            return Array.isArray(parsed) ? parsed : [];
+        } catch {
+            return String(value).split(/[,|]/).map((part) => part.trim()).filter(Boolean);
+        }
+    };
+
+    const syncCancelReasonUI = () => {
+        const shouldShow = processStatusEl && processStatusEl.value === 'cancelled';
+        if (cancelReasonSection) cancelReasonSection.classList.toggle('hidden', !shouldShow);
+        if (!shouldShow) {
+            cancelReasonOptions.forEach((checkbox) => { checkbox.checked = false; });
+        }
+    };
+
     const toDbStatus = (uiStatus) => {
         const value = String(uiStatus || 'pending');
             const aliases = {
@@ -155,6 +176,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const cancelled = data.status === 'cancelled';
             if (cancelledHint) cancelledHint.classList.toggle('hidden', !cancelled);
+            const existingReasons = parseCancelReasons(data.cancel_reason);
+            cancelReasonOptions.forEach((checkbox) => {
+                checkbox.checked = existingReasons.includes(checkbox.value);
+            });
+            syncCancelReasonUI();
             // อนุญาตให้แก้ไข review_status ได้แม้ถูกยกเลิก
             setDisabled(false);
         } catch (err) {
@@ -181,6 +207,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const cancelled = data.status === 'cancelled';
                 if (cancelledHint) cancelledHint.classList.toggle('hidden', !cancelled);
+                const existingReasons = parseCancelReasons(data.cancel_reason);
+                cancelReasonOptions.forEach((checkbox) => {
+                    checkbox.checked = existingReasons.includes(checkbox.value);
+                });
+                syncCancelReasonUI();
 
                 setDisabled(false);
                 toast('แสดงข้อมูลจากเครื่อง (ออฟไลน์)', 'success');
@@ -207,9 +238,16 @@ document.addEventListener('DOMContentLoaded', () => {
             // ปิดการแก้ไขระหว่างบันทึก
             setDisabled(true);
             const statusValue = processStatusEl ? processStatusEl.value : 'pending';
+            const selectedReasons = cancelReasonOptions.filter((checkbox) => checkbox.checked).map((checkbox) => checkbox.value);
+            if (statusValue === 'cancelled' && selectedReasons.length === 0) {
+                toast('กรุณาเลือกเหตุผลการยกเลิกอย่างน้อย 1 ข้อ', 'error');
+                setDisabled(false);
+                return;
+            }
             const payload = {
                 status: toDbStatus(statusValue),
                 review_status: statusValue === 'pending' ? 'pending_review' : 'reviewed',
+                cancel_reason: statusValue === 'cancelled' ? selectedReasons : null,
             };
 
             console.log('Sending payload:', payload);
@@ -268,6 +306,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     } else {
         console.error('Save button not found!');
+    }
+
+    if (processStatusEl) {
+        processStatusEl.addEventListener('change', syncCancelReasonUI);
     }
 
     // เริ่มดึงรายละเอียดเมื่อหน้าโหลด

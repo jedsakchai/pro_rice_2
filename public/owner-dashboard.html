@@ -53,6 +53,17 @@
                                 <span id="owner-order-count" class="ml-auto inline-flex min-w-7 h-7 items-center justify-center rounded-full bg-white text-field-700 text-xs font-bold px-2 hidden">0</span>
                             </a>
 
+                            <a href="/owner-cancellations.html" class="btn-primary w-full inline-flex items-center justify-between gap-3">
+                                <span class="inline-flex items-center justify-center w-8 h-8 bg-white/20 rounded">
+                                    <svg viewBox="0 0 24 24" class="w-5 h-5" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M4 4h16v16H4z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                                        <path d="M8 8h8M8 12h8M8 16h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                    </svg>
+                                </span>
+                                <span class="flex-1 text-center">แจ้งเตือนคำขอยกเลิก</span>
+                                <span id="owner-cancel-count" class="ml-auto inline-flex min-w-7 h-7 items-center justify-center rounded-full bg-white text-field-700 text-xs font-bold px-2 hidden">0</span>
+                            </a>
+
                             <a href="/owner-inquiries.html" class="btn-primary w-full inline-flex items-center justify-center gap-3">
                                 <span class="inline-flex items-center justify-center w-8 h-8 bg-white/20 rounded">
                                     <svg viewBox="0 0 24 24" class="w-5 h-5" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -101,6 +112,7 @@
 
             const ownerCheckCountEl = document.getElementById('owner-check-count');
             const ownerOrderCountEl = document.getElementById('owner-order-count');
+            const ownerCancelCountEl = document.getElementById('owner-cancel-count');
             if (!session?.mill_id) return;
 
             const [millingsResp, ordersResp] = await Promise.all([
@@ -108,10 +120,23 @@
                 fetch('/api/orders/count'),
             ]);
 
-            const [millingsJson, ordersJson] = await Promise.all([millingsResp.json(), ordersResp.json()]);
+            const cancellationsResp = await fetch('/api/notifications/cancellations', {
+                headers: {
+                    'x-session-data': (typeof window.btoa === 'function')
+                        ? window.btoa(unescape(encodeURIComponent(JSON.stringify(session))))
+                        : encodeURIComponent(JSON.stringify(session))
+                }
+            }).catch(() => null);
+
+            const [millingsJson, ordersJson, cancellationsJson] = await Promise.all([
+                millingsResp.json(),
+                ordersResp.json(),
+                cancellationsResp ? cancellationsResp.json().catch(() => null) : Promise.resolve(null)
+            ]);
 
             const pendingMillingCount = Number(millingsJson?.data?.count || 0);
             const pendingOrderCount = Number(ordersJson?.data?.count || 0);
+            const pendingCancelCount = Array.isArray(cancellationsJson?.data) ? cancellationsJson.data.length : 0;
 
             if (ownerCheckCountEl) {
                 if (pendingMillingCount > 0) {
@@ -128,6 +153,15 @@
                     ownerOrderCountEl.classList.remove('hidden');
                 } else {
                     ownerOrderCountEl.classList.add('hidden');
+                }
+            }
+
+            if (ownerCancelCountEl) {
+                if (pendingCancelCount > 0) {
+                    ownerCancelCountEl.textContent = pendingCancelCount > 99 ? '99+' : String(pendingCancelCount);
+                    ownerCancelCountEl.classList.remove('hidden');
+                } else {
+                    ownerCancelCountEl.classList.add('hidden');
                 }
             }
         } catch { /* ignore */ }

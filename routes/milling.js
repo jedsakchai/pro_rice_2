@@ -2,8 +2,16 @@ const express = require('express');
 
 const pool = require('../config/database');
 const { optionalOwnerAuth, requireAuth, requireRole } = require('../middleware/ownerAuth');
+const { recordStatusHistory } = require('../utils/status-history');
 
 const router = express.Router();
+
+function stringifyCancelReason(value) {
+  if (Array.isArray(value)) return JSON.stringify(value.filter(Boolean));
+  if (value && typeof value === 'object') return JSON.stringify(value);
+  const text = String(value || '').trim();
+  return text ? JSON.stringify([text]) : null;
+}
 
 const toInt = (v, fallback) => {
   const n = Number(v);
@@ -286,6 +294,13 @@ router.post('/', optionalOwnerAuth, async (req, res) => {
         address,
       });
 
+      await recordStatusHistory(conn, {
+        resourceType: 'milling',
+        resourceId: result.insertId,
+        fromStatus: null,
+        toStatus: 'pending_review',
+      });
+
       // Create initial notification for the submitting villager
       try {
         if (submitted_by) {
@@ -318,6 +333,10 @@ router.put('/:id', requireRole('owner'), async (req, res) => {
   const allowed = {};
   if (payload.status) allowed.status = normalizeMillingStatus(payload.status);
   if (payload.review_status) allowed.review_status = String(payload.review_status);
+  if (String(payload.status || '').trim() === 'cancelled') {
+    allowed.cancel_reason = stringifyCancelReason(payload.cancel_reason);
+    allowed.cancelled_at = null;
+  }
 
   const keys = Object.keys(allowed);
   if (keys.length === 0) return res.status(400).json({ success: false, message: 'ไม่มีข้อมูลให้แก้ไข' });
@@ -326,20 +345,29 @@ router.put('/:id', requireRole('owner'), async (req, res) => {
     const conn = await pool.getConnection();
     try {
       // Ensure owner can only modify their own mill
-      const [rows] = await conn.execute('SELECT mill_id FROM milling_requests WHERE request_id = ? LIMIT 1', [id]);
+      const [rows] = await conn.execute('SELECT mill_id, status, submitted_by FROM milling_requests WHERE request_id = ? LIMIT 1', [id]);
       const row = rows && rows[0];
       if (!row) return res.status(404).json({ success: false, message: 'ไม่พบข้อมูล' });
       if (Number(row.mill_id) !== Number(req.owner.mill_id)) {
         return res.status(403).json({ success: false, message: 'Forbidden' });
       }
 
-      const sets = keys.map((k) => `${k} = ?`).join(', ');
-      const values = keys.map((k) => allowed[k]);
+      const sets = keys.map((k) => `${k} = ${k === 'cancelled_at' ? 'CURRENT_TIMESTAMP' : '?'}`).join(', ');
+      const values = keys.filter((k) => k !== 'cancelled_at').map((k) => allowed[k]);
 
       await conn.execute(
         `UPDATE milling_requests SET ${sets} WHERE request_id = ?`,
         [...values, id]
       );
+
+      if (String(row.status || '').trim() !== String(allowed.status || row.status || '').trim()) {
+        await recordStatusHistory(conn, {
+          resourceType: 'milling',
+          resourceId: id,
+          fromStatus: row.status,
+          toStatus: allowed.status || row.status,
+        });
+      }
 
       const [updatedRows] = await conn.execute(
         'SELECT * FROM milling_requests WHERE request_id = ? LIMIT 1',
@@ -351,7 +379,9 @@ router.put('/:id', requireRole('owner'), async (req, res) => {
         const updated = updatedRows && updatedRows[0];
         if (updated && updated.submitted_by) {
           const vid = Number(updated.submitted_by) || null;
-          const message = `สถานะคำขอสีข้าวเปลี่ยนเป็น ${String(updated.status || '')}`;
+          const message = String(updated.status || '') === 'cancelled'
+            ? 'ยกเลิกคำขอสีข้าวแล้ว'
+            : `สถานะคำขอสีข้าวเปลี่ยนเป็น ${String(updated.status || '')}`;
           try {
             await conn.execute(
               'INSERT INTO notifications (villager_id, type, resource_id, status, message) VALUES (?, ?, ?, ?, ?)',

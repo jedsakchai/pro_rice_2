@@ -4,6 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const pool = require('../config/database');
 const { optionalOwnerAuth } = require('../middleware/ownerAuth');
+const { recordStatusHistory } = require('../utils/status-history');
 
 const router = express.Router();
 
@@ -20,6 +21,13 @@ const storage = multer.diskStorage({
   }
 });
 const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
+
+function stringifyCancelReason(value) {
+  if (Array.isArray(value)) return JSON.stringify(value.filter(Boolean));
+  if (value && typeof value === 'object') return JSON.stringify(value);
+  const text = String(value || '').trim();
+  return text ? JSON.stringify([text]) : null;
+}
 
 function generateOrderNumber() {
   const now = Date.now();
@@ -118,6 +126,13 @@ async function createOrderRecord(conn, payload, items, options = {}) {
   });
 
   await Promise.all(itemPromises);
+
+  await recordStatusHistory(conn, {
+    resourceType: 'order',
+    resourceId: orderId,
+    fromStatus: null,
+    toStatus: orderStatus,
+  });
 
   return { order_id: orderId, order_number: orderNumber, mill_id, total, shipping_fee };
 }
@@ -403,10 +418,14 @@ router.put('/:id', async (req, res) => {
   const id = Number(req.params.id);
   const status = normalizeStatus(req.body && req.body.status);
   const payment_proof_url = req.body && req.body.payment_proof_url ? String(req.body.payment_proof_url).trim() : '';
+  const cancelReason = stringifyCancelReason(req.body && req.body.cancel_reason);
 
   try {
     const conn = await pool.getConnection();
     try {
+      const [beforeRows] = await conn.execute('SELECT status, villager_id FROM orders WHERE order_id = ? LIMIT 1', [id]);
+      const before = beforeRows && beforeRows[0] ? beforeRows[0] : null;
+
       const sets = ['status = ?'];
       const values = [status];
 
@@ -415,18 +434,32 @@ router.put('/:id', async (req, res) => {
         values.push(payment_proof_url);
       }
 
+      if (status === 'cancelled') {
+        sets.push('cancel_reason = ?');
+        values.push(cancelReason);
+        sets.push('cancelled_at = CURRENT_TIMESTAMP');
+      }
+
       values.push(id);
       const [result] = await conn.execute(`UPDATE orders SET ${sets.join(', ')} WHERE order_id = ?`, values);
       if (!result.affectedRows) {
         return res.status(404).json({ success: false, message: 'ไม่พบคำสั่งซื้อ' });
       }
 
+      if (before && String(before.status || '').trim() !== status) {
+        await recordStatusHistory(conn, {
+          resourceType: 'order',
+          resourceId: id,
+          fromStatus: before.status,
+          toStatus: status,
+        });
+      }
+
       // Record a new notification event for the villager about this status change
       try {
-        const [rows] = await conn.execute('SELECT villager_id, status FROM orders WHERE order_id = ? LIMIT 1', [id]);
-        const order = rows && rows[0];
+        const order = before;
         if (order && order.villager_id) {
-          const message = `สถานะคำสั่งซื้อเปลี่ยนเป็น ${String(status)}`;
+          const message = status === 'cancelled' ? 'ยกเลิกคำสั่งซื้อสินค้าแล้ว' : `สถานะคำสั่งซื้อเปลี่ยนเป็น ${String(status)}`;
           try {
             await conn.execute(
               'INSERT INTO notifications (villager_id, type, resource_id, status, message) VALUES (?, ?, ?, ?, ?)',

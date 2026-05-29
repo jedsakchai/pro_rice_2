@@ -2,6 +2,7 @@
 const express = require('express');
 const pool = require('../config/database');
 const { requireRole } = require('../middleware/ownerAuth');
+const { loadStatusHistory, recordStatusHistory } = require('../utils/status-history');
 
 const router = express.Router();
 
@@ -41,6 +42,46 @@ const CANCELLATION_STATUS_LABELS = {
   approved_cancel: 'ยกเลิกสำเร็จแล้ว',
   rejected_cancel: 'ปฏิเสธคำขอยกเลิก',
 };
+
+function getCancellationTargetLabel(type) {
+  return type === 'order' ? 'คำสั่งซื้อสินค้า' : 'คำขอสีข้าว';
+}
+
+function getCancellationResourceStatusLabel(type, status) {
+  const value = String(status || '').trim();
+  if (value === 'cancelled') {
+    return type === 'order' ? 'ยกเลิกคำสั่งซื้อสินค้าแล้ว' : 'ยกเลิกคำขอสีข้าวแล้ว';
+  }
+
+  if (type === 'order') {
+    const map = {
+      pending: 'รอดำเนินการ',
+      accepted: 'ยอมรับคำสั่งซื้อแล้ว',
+      pending_payment: 'รอชำระเงิน',
+      payment_review: 'รอตรวจสอบการชำระเงิน',
+      paid: 'ชำระเงินแล้ว',
+      preparing: 'กำลังเตรียมสินค้า',
+      ready_to_ship: 'พร้อมจัดส่ง',
+      shipping: 'จัดส่งแล้ว',
+      completed: 'สำเร็จ',
+    };
+    return map[value] || value || '-';
+  }
+
+  const map = {
+    pending_review: 'รอตรวจสอบ',
+    accepted: 'รับคำสั่งแล้ว',
+    awaiting_pickup: 'รอไปรับข้าว',
+    received: 'รับข้าวแล้ว',
+    queued: 'รอคิวสี',
+    milling: 'กำลังสีข้าว',
+    packing: 'กำลังแพ็ก',
+    ready: 'พร้อมรับ/จัดส่ง',
+    shipping: 'กำลังจัดส่ง',
+    delivered: 'ส่งมอบแล้ว',
+  };
+  return map[value] || value || '-';
+}
 
 const CANCELLATION_CONFIG = {
   order: {
@@ -93,8 +134,16 @@ function stringifyCancellationReasons(choices) {
   return JSON.stringify(Array.isArray(choices) ? choices : []);
 }
 
-function buildCancellationMessage(status) {
-  return cancellationLabel(status);
+function buildCancellationMessage(type, status) {
+  if (status === 'approved_cancel') {
+    return type === 'order' ? 'ยกเลิกคำสั่งซื้อสินค้าแล้ว' : 'ยกเลิกคำขอสีข้าวแล้ว';
+  }
+  if (status === 'rejected_cancel') {
+    return 'ปฏิเสธคำขอยกเลิก';
+  }
+  return status === 'pending_cancel'
+    ? `รอยืนยันการยกเลิก${getCancellationTargetLabel(type)}`
+    : cancellationLabel(status);
 }
 
 async function loadCancellationResource(conn, type, resourceId) {
@@ -115,7 +164,7 @@ async function loadCancellationResource(conn, type, resourceId) {
 async function upsertCancellationNotification(conn, villagerId, type, resourceId, status) {
   await conn.execute(
     'INSERT INTO notifications (villager_id, type, resource_id, status, message) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE status = VALUES(status), message = VALUES(message), is_read = FALSE, created_at = CURRENT_TIMESTAMP',
-    [villagerId, type, resourceId, status, buildCancellationMessage(status)]
+    [villagerId, type, resourceId, status, buildCancellationMessage(type, status)]
   );
 }
 
@@ -159,21 +208,23 @@ async function createCancellationRequest(conn, { type, resourceId, villagerId, c
 
   const reasonText = stringifyCancellationReasons(parsedChoices);
   const noteText = String(additionalNote || '').trim();
+  const resourceStatus = String(resource.status || '').trim() || null;
 
   await conn.execute(
-    `INSERT INTO cancellation_requests (order_id, milling_request_id, user_id, cancellation_reason, additional_note, status)
-     VALUES (?, ?, ?, ?, ?, 'pending_cancel')
+    `INSERT INTO cancellation_requests (order_id, milling_request_id, user_id, cancellation_reason, additional_note, resource_status, status)
+     VALUES (?, ?, ?, ?, ?, ?, 'pending_cancel')
      ON DUPLICATE KEY UPDATE
        user_id = VALUES(user_id),
        cancellation_reason = VALUES(cancellation_reason),
        additional_note = VALUES(additional_note),
+       resource_status = VALUES(resource_status),
        status = 'pending_cancel',
        updated_at = CURRENT_TIMESTAMP`,
-    [normalizedType === 'order' ? resourceIdValue : null, normalizedType === 'milling' ? resourceIdValue : null, villagerIdValue, reasonText, noteText || null]
+    [normalizedType === 'order' ? resourceIdValue : null, normalizedType === 'milling' ? resourceIdValue : null, villagerIdValue, reasonText, noteText || null, resourceStatus]
   );
 
   const [rows] = await conn.query(
-    `SELECT id, order_id, milling_request_id, user_id, cancellation_reason, additional_note, status, created_at, updated_at
+    `SELECT id, order_id, milling_request_id, user_id, cancellation_reason, additional_note, resource_status, status, created_at, updated_at
      FROM cancellation_requests
      WHERE ${normalizedType === 'order' ? 'order_id' : 'milling_request_id'} = ?
      LIMIT 1`,
@@ -249,8 +300,20 @@ async function updateCancellationRequestStatus(conn, { cancellationId, status, o
     });
 
     if (type === 'order') {
+      await recordStatusHistory(conn, {
+        resourceType: 'order',
+        resourceId,
+        fromStatus: resource.status,
+        toStatus: 'cancelled',
+      });
       await conn.execute('UPDATE orders SET status = ?, cancel_reason = ?, cancelled_at = CURRENT_TIMESTAMP WHERE order_id = ?', ['cancelled', reasonText, resourceId]);
     } else {
+      await recordStatusHistory(conn, {
+        resourceType: 'milling',
+        resourceId,
+        fromStatus: resource.status,
+        toStatus: 'cancelled',
+      });
       await conn.execute('UPDATE milling_requests SET status = ?, cancel_reason = ?, cancelled_at = CURRENT_TIMESTAMP WHERE request_id = ?', ['cancelled', reasonText, resourceId]);
     }
   }
@@ -264,6 +327,81 @@ async function updateCancellationRequestStatus(conn, { cancellationId, status, o
     reason_choices: parseCancellationReasons(request.cancellation_reason),
   };
 }
+
+// GET /api/notifications/cancellations — owner view of pending cancellation requests
+router.get('/cancellations', async (req, res) => {
+  try {
+    const session = parseSessionFromHeader(req);
+    if (session?.role !== 'owner') {
+      return res.status(403).json({ success: false, message: 'Forbidden' });
+    }
+
+    const ownerMillId = Number(session?.mill_id || 0);
+    if (!ownerMillId) {
+      return res.status(401).json({ success: false, message: 'Unauthorized' });
+    }
+
+    const conn = await pool.getConnection();
+    try {
+      const [orderRows] = await conn.query(
+        `SELECT
+            cr.id AS cancellation_id,
+            'order' AS type,
+            o.order_id AS resource_id,
+            o.order_number AS resource_number,
+            o.customer_name,
+            o.status AS current_status,
+            cr.status AS cancellation_status,
+            cr.cancellation_reason,
+            cr.additional_note,
+            cr.created_at AS cancellation_created_at,
+            o.created_at AS resource_created_at
+         FROM cancellation_requests cr
+         INNER JOIN orders o ON o.order_id = cr.order_id
+         WHERE o.mill_id = ? AND cr.status = 'pending_cancel'
+         ORDER BY cr.created_at DESC, cr.id DESC`,
+        [ownerMillId]
+      );
+
+      const [millingRows] = await conn.query(
+        `SELECT
+            cr.id AS cancellation_id,
+            'milling' AS type,
+            m.request_id AS resource_id,
+            CAST(m.request_id AS CHAR) AS resource_number,
+            m.customer_name,
+            m.status AS current_status,
+            cr.status AS cancellation_status,
+            cr.cancellation_reason,
+            cr.additional_note,
+            cr.created_at AS cancellation_created_at,
+            m.created_at AS resource_created_at
+         FROM cancellation_requests cr
+         INNER JOIN milling_requests m ON m.request_id = cr.milling_request_id
+         WHERE m.mill_id = ? AND cr.status = 'pending_cancel'
+         ORDER BY cr.created_at DESC, cr.id DESC`,
+        [ownerMillId]
+      );
+
+      const rows = [...(orderRows || []), ...(millingRows || [])]
+        .sort((a, b) => new Date(b.cancellation_created_at) - new Date(a.cancellation_created_at))
+        .map((row) => ({
+          ...row,
+          reason_choices: parseCancellationReasons(row.cancellation_reason),
+          target_label: getCancellationTargetLabel(row.type),
+          current_status_label: getCancellationResourceStatusLabel(row.type, row.current_status),
+          cancellation_status_label: cancellationLabel(row.cancellation_status),
+        }));
+
+      return res.json({ success: true, data: rows });
+    } finally {
+      try { conn.release(); } catch (e) { /* ignore */ }
+    }
+  } catch (err) {
+    console.error('list cancellation requests error:', err);
+    return res.status(err.statusCode || 500).json({ success: false, message: err.message || 'Unable to load cancellation requests' });
+  }
+});
 
 // GET /api/notifications/count — ดึงจำนวนการแจ้งเตือนที่ยังไม่ได้อ่าน
 router.get('/count', async (req, res) => {
@@ -609,22 +747,104 @@ router.get('/:type/:resourceId/timeline', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Invalid request' });
     }
 
-    const [rows] = await pool.query(
-      `SELECT notification_id, type, resource_id, status, message, is_read, created_at
-       FROM notifications
-       WHERE villager_id = ? AND type = ? AND resource_id = ?
-       ORDER BY created_at DESC, notification_id DESC`,
-      [villager_id, type, resourceId]
-    );
-
-    return res.json({
-      success: true,
-      data: {
-        type,
-        resource_id: resourceId,
-        items: rows || []
+    const conn = await pool.getConnection();
+    try {
+      const history = await loadStatusHistory(conn, { resourceType: type, resourceId });
+      if (history.length > 0) {
+        return res.json({
+          success: true,
+          data: {
+            type,
+            resource_id: resourceId,
+            items: history.map((row) => ({
+              history_id: row.history_id,
+              type,
+              resource_id: Number(row.resource_id),
+              status: row.to_status,
+              message: getCancellationResourceStatusLabel(type, row.to_status),
+              is_read: true,
+              created_at: row.created_at,
+            }))
+          }
+        });
       }
-    });
+
+      const resource = await loadCancellationResource(conn, type, resourceId);
+
+      const [rows] = await conn.query(
+        `SELECT notification_id, type, resource_id, status, message, is_read, created_at
+         FROM notifications
+         WHERE villager_id = ? AND type = ? AND resource_id = ?
+         ORDER BY created_at ASC, notification_id ASC`,
+        [villager_id, type, resourceId]
+      );
+
+      if (rows && rows.length > 0) {
+        return res.json({
+          success: true,
+          data: {
+            type,
+            resource_id: resourceId,
+            items: rows || []
+          }
+        });
+      }
+
+      if (resource && String(resource.status || '').trim() === 'cancelled') {
+        const [cancelRows] = await conn.query(
+          `SELECT resource_status, updated_at, created_at
+           FROM cancellation_requests
+           WHERE ${type === 'order' ? 'order_id' : 'milling_request_id'} = ?
+           ORDER BY updated_at DESC, id DESC
+           LIMIT 1`,
+          [resourceId]
+        );
+
+        const cancelRequest = cancelRows && cancelRows[0] ? cancelRows[0] : null;
+        const preCancelStatus = String(cancelRequest?.resource_status || '').trim();
+        if (preCancelStatus) {
+          const fallbackAt = cancelRequest.updated_at || cancelRequest.created_at || resource.updated_at || resource.created_at || new Date().toISOString();
+          return res.json({
+            success: true,
+            data: {
+              type,
+              resource_id: resourceId,
+              items: [
+                {
+                  notification_id: null,
+                  type,
+                  resource_id: resourceId,
+                  status: preCancelStatus,
+                  message: getCancellationResourceStatusLabel(type, preCancelStatus),
+                  is_read: true,
+                  created_at: resource.created_at || fallbackAt,
+                },
+                {
+                  notification_id: null,
+                  type,
+                  resource_id: resourceId,
+                  status: 'cancelled',
+                  message: getCancellationResourceStatusLabel(type, 'cancelled'),
+                  is_read: true,
+                  created_at: fallbackAt,
+                }
+              ]
+            }
+          });
+        }
+      }
+
+      return res.json({
+        success: true,
+        data: {
+          type,
+          resource_id: resourceId,
+          items: rows || []
+        }
+      });
+    } finally {
+      conn.release();
+    }
   } catch (err) {
     console.error('notification timeline error:', err);
     return res.status(500).json({ success: false, message: 'Unable to load timeline' });

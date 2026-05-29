@@ -41,6 +41,8 @@ CREATE TABLE IF NOT EXISTS orders (
   payment_method ENUM('bank_transfer','cod','promptpay') NOT NULL DEFAULT 'bank_transfer',
   payment_proof_url VARCHAR(255) NULL,
   note VARCHAR(500) NULL,
+  cancel_reason TEXT NULL,
+  cancelled_at TIMESTAMP NULL,
   total DECIMAL(12,2) NOT NULL,
   status ENUM('pending','accepted','pending_payment','payment_review','paid','preparing','ready_to_ship','shipping','completed','cancelled') DEFAULT 'pending',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -111,6 +113,8 @@ CREATE TABLE IF NOT EXISTS milling_requests (
   weight_kg DECIMAL(10, 2) NULL,
   dropoff_date DATE NOT NULL,
   expected_return_date DATE NULL,
+  cancel_reason TEXT NULL,
+  cancelled_at TIMESTAMP NULL,
   status ENUM('pending_review', 'accepted', 'awaiting_pickup', 'received', 'queued', 'milling', 'packing', 'ready', 'shipping', 'delivered', 'cancelled') DEFAULT 'pending_review',
   review_status ENUM('pending_review', 'reviewed') DEFAULT 'pending_review',
   notes TEXT NULL,
@@ -175,6 +179,18 @@ CREATE TABLE IF NOT EXISTS notifications (
     ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Status history for timeline rendering
+CREATE TABLE IF NOT EXISTS status_history (
+  history_id INT PRIMARY KEY AUTO_INCREMENT,
+  resource_type ENUM('order','milling') NOT NULL,
+  resource_id INT NOT NULL,
+  from_status VARCHAR(60) NULL,
+  to_status VARCHAR(60) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_status_history_lookup (resource_type, resource_id, created_at),
+  INDEX idx_status_history_created_at (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Cancellation requests
 CREATE TABLE IF NOT EXISTS cancellation_requests (
   id INT PRIMARY KEY AUTO_INCREMENT,
@@ -183,6 +199,7 @@ CREATE TABLE IF NOT EXISTS cancellation_requests (
   user_id INT NOT NULL,
   cancellation_reason TEXT NOT NULL,
   additional_note TEXT NULL,
+  resource_status VARCHAR(60) NULL,
   status ENUM('pending_cancel', 'approved_cancel', 'rejected_cancel') NOT NULL DEFAULT 'pending_cancel',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

@@ -53,7 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
       ready: 'พร้อมรับ/จัดส่ง',
       shipping: 'กำลังจัดส่ง',
       delivered: 'ส่งมอบแล้ว',
-      cancelled: 'ยกเลิก'
+      cancelled: 'ยกเลิกคำขอสีข้าวแล้ว'
     };
     return map[status] || map[String(status || '').trim()] || status || '-';
   };
@@ -131,10 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <td class="border border-gray-300 px-3 py-2">${statusBadge}</td>
           <td class="border border-gray-300 px-3 py-2">${reviewBadge}</td>
           <td class="border border-gray-300 px-3 py-2">
-            <div class="flex flex-wrap gap-2">
-              <a href="/owner-check-detail.html?id=${row.request_id}" class="btn-secondary px-3 py-1 text-xs">รายละเอียด</a>
-              <button type="button" data-action="quick-confirm" data-id="${row.request_id}" class="btn-primary px-3 py-1 text-xs">ยืนยัน</button>
-            </div>
+            <a href="/owner-check-detail.html?id=${row.request_id}" class="btn-secondary px-3 py-1 text-xs inline-flex">รายละเอียด</a>
           </td>
         </tr>
       `;
@@ -142,31 +139,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     tableBody.innerHTML = html;
   };
-
-  document.addEventListener('click', async (e) => {
-    const target = e.target;
-    if (!(target instanceof HTMLElement)) return;
-
-    const confirmBtn = target.closest('button[data-action="quick-confirm"]');
-    if (!confirmBtn) return;
-
-    const requestId = confirmBtn.getAttribute('data-id');
-    if (!requestId) return;
-
-    try {
-      confirmBtn.setAttribute('disabled', 'true');
-      await updateRequest(requestId, {
-        status: 'accepted',
-        review_status: 'reviewed',
-      });
-      toast('ยืนยันคำขอสีข้าวเรียบร้อย', 'success');
-      await fetchRows();
-    } catch (err) {
-      console.error(err);
-      confirmBtn.removeAttribute('disabled');
-      toast(err.message || 'ยืนยันไม่สำเร็จ', 'error');
-    }
-  });
 
   // Fetch milling requests from API
   const fetchRows = async () => {
@@ -197,4 +169,5 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Initial load
   fetchRows();
+  setInterval(fetchRows, 15000);
 });

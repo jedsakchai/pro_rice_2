@@ -61,7 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
       ready_to_ship: 'พร้อมจัดส่ง',
       shipping: 'จัดส่งแล้ว',
       completed: 'สำเร็จ',
-      cancelled: 'ยกเลิก'
+      cancelled: 'ยกเลิกคำสั่งซื้อสินค้าแล้ว'
     };
     return map[status] || map[String(status || '').trim()] || status || '-';
   };
@@ -90,7 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
       ready: 'พร้อมรับ/จัดส่ง',
       shipping: 'กำลังจัดส่ง',
       delivered: 'ส่งมอบแล้ว',
-      cancelled: 'ยกเลิก'
+      cancelled: 'ยกเลิกคำขอสีข้าวแล้ว'
     };
     return map[status] || map[String(status || '').trim()] || status || '-';
   };

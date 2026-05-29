@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // Reload notifications when mark-read event occurs
     window.addEventListener('notifications:changed', loadNotifications);
+    setInterval(loadNotifications, 15000);
 });
 
 async function loadNotifications() {
@@ -52,9 +53,9 @@ function getStatusDisplay(type, status) {
         'ready_to_ship': { th: 'พร้อมจัดส่ง', color: 'blue' },
         'shipping': { th: 'จัดส่งแล้ว', color: 'green' },
         'completed': { th: 'สำเร็จ', color: 'green' },
-        'cancelled': { th: 'ยกเลิก', color: 'gray' },
-        'pending_cancel': { th: 'รอยืนยันการยกเลิก', color: 'orange' },
-        'approved_cancel': { th: 'ยกเลิกสำเร็จแล้ว', color: 'green' },
+        'cancelled': { th: 'ยกเลิกคำสั่งซื้อสินค้าแล้ว', color: 'gray' },
+        'pending_cancel': { th: 'รอยืนยันการยกเลิกคำสั่งซื้อ', color: 'orange' },
+        'approved_cancel': { th: 'ยกเลิกคำสั่งซื้อสินค้าแล้ว', color: 'green' },
         'rejected_cancel': { th: 'ปฏิเสธคำขอยกเลิก', color: 'red' }
     };
 
@@ -69,9 +70,9 @@ function getStatusDisplay(type, status) {
         'ready': { th: 'พร้อมรับ/จัดส่ง', color: 'blue' },
         'shipping': { th: 'กำลังจัดส่ง', color: 'blue' },
         'delivered': { th: 'ส่งมอบแล้ว', color: 'green' },
-        'cancelled': { th: 'ยกเลิก', color: 'gray' },
-        'pending_cancel': { th: 'รอยืนยันการยกเลิก', color: 'orange' },
-        'approved_cancel': { th: 'ยกเลิกสำเร็จแล้ว', color: 'green' },
+        'cancelled': { th: 'ยกเลิกคำขอสีข้าวแล้ว', color: 'gray' },
+        'pending_cancel': { th: 'รอยืนยันการยกเลิกคำขอสีข้าว', color: 'orange' },
+        'approved_cancel': { th: 'ยกเลิกคำขอสีข้าวแล้ว', color: 'green' },
         'rejected_cancel': { th: 'ปฏิเสธคำขอยกเลิก', color: 'red' }
     };
 

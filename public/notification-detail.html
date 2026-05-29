@@ -425,9 +425,9 @@
       ready_to_ship: 'พร้อมจัดส่ง',
       shipping: 'จัดส่งแล้ว',
       completed: 'สำเร็จ',
-      cancelled: 'ยกเลิก',
-      pending_cancel: 'รอยืนยันการยกเลิก',
-      approved_cancel: 'ยกเลิกสำเร็จแล้ว',
+      cancelled: 'ยกเลิกคำสั่งซื้อสินค้าแล้ว',
+      pending_cancel: 'รอยืนยันการยกเลิกคำสั่งซื้อ',
+      approved_cancel: 'ยกเลิกคำสั่งซื้อสินค้าแล้ว',
       rejected_cancel: 'ปฏิเสธคำขอยกเลิก'
     };
 
@@ -442,9 +442,9 @@
       ready: 'พร้อมรับ/จัดส่ง',
       shipping: 'กำลังจัดส่ง',
       delivered: 'ส่งมอบแล้ว',
-      cancelled: 'ยกเลิก',
-      pending_cancel: 'รอยืนยันการยกเลิก',
-      approved_cancel: 'ยกเลิกสำเร็จแล้ว',
+      cancelled: 'ยกเลิกคำขอสีข้าวแล้ว',
+      pending_cancel: 'รอยืนยันการยกเลิกคำขอสีข้าว',
+      approved_cancel: 'ยกเลิกคำขอสีข้าวแล้ว',
       rejected_cancel: 'ปฏิเสธคำขอยกเลิก'
     };
 
@@ -536,36 +536,25 @@
     }
 
     function buildDerivedTimeline(type, resource, latestItems) {
-      const path = type === 'order'
-        ? ['pending', 'accepted', 'pending_payment', 'payment_review', 'paid', 'preparing', 'ready_to_ship', 'shipping', 'completed', 'cancelled']
-        : ['pending_review', 'accepted', 'awaiting_pickup', 'received', 'queued', 'milling', 'packing', 'ready', 'shipping', 'delivered', 'cancelled'];
+      if (Array.isArray(latestItems) && latestItems.length > 0) {
+        return latestItems;
+      }
 
-      const currentStatus = String(resource?.status || latestItems?.[0]?.status || '').trim();
-      const currentIndex = path.indexOf(currentStatus);
-      if (currentIndex < 0) return latestItems || [];
+      const status = String(resource?.status || '').trim();
+      if (!status) return [];
 
-      const steps = path.slice(0, currentIndex + 1);
-      const createdAt = parseDate(resource?.created_at || latestItems?.[steps.length - 1]?.created_at);
-      const updatedAt = parseDate(resource?.updated_at || latestItems?.[0]?.created_at || resource?.created_at);
-      const baseStart = createdAt || updatedAt || new Date();
-      const baseEnd = updatedAt || baseStart;
-      const totalMinutes = Math.max(steps.length - 1, 1) * 10;
-      const anchor = shiftMinutes(baseEnd, -totalMinutes);
-
-      return steps.map((status, index) => {
-        const sourceDate = shiftMinutes(anchor, index * 10);
-        return {
-          type,
-          resource_id: resource?.request_id || resource?.order_id || latestItems?.[0]?.resource_id,
-          status,
-          message: statusLabel(type, status),
-          is_read: true,
-          created_at: sourceDate.toISOString(),
-          label: statusLabel(type, status),
-          day: formatShortDateTime(sourceDate).day,
-          time: formatShortDateTime(sourceDate).time,
-        };
-      }).reverse();
+      const sourceDate = parseDate(resource?.updated_at || resource?.created_at || new Date()) || new Date();
+      return [{
+        type,
+        resource_id: resource?.request_id || resource?.order_id,
+        status,
+        message: statusLabel(type, status),
+        is_read: true,
+        created_at: sourceDate.toISOString(),
+        label: statusLabel(type, status),
+        day: formatShortDateTime(sourceDate).day,
+        time: formatShortDateTime(sourceDate).time,
+      }];
     }
 
     function getEncodedSession() {
@@ -853,7 +842,7 @@
             resource = resourceJson.data || {};
             currentResource = resource;
             renderResourceNote(resource);
-            if (items.length < 2) {
+            if (items.length === 0) {
               items = buildDerivedTimeline(type, resource, items);
             }
           }

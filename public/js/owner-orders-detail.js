@@ -25,6 +25,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnSave = document.getElementById('btn-save');
   const paymentProofLink = document.getElementById('payment-proof');
   const paymentProofEmpty = document.getElementById('payment-proof-empty');
+  const cancelReasonSection = document.getElementById('cancel-reason-section');
+  const cancelReasonOptions = Array.from(document.querySelectorAll('.cancel-reason-option'));
 
   const toast = (message, type = 'success') => {
     if (window.FormUtils?.showToast) {
@@ -60,8 +62,27 @@ document.addEventListener('DOMContentLoaded', () => {
     ready_to_ship: 'พร้อมจัดส่ง',
     shipping: 'จัดส่งแล้ว',
     completed: 'สำเร็จ',
-    cancelled: 'ยกเลิก'
+    cancelled: 'ยกเลิกคำสั่งซื้อสินค้าแล้ว'
   }[status] || status || '-');
+
+  const parseCancelReasons = (value) => {
+    if (!value) return [];
+    if (Array.isArray(value)) return value;
+    try {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return String(value).split(/[,|]/).map((part) => part.trim()).filter(Boolean);
+    }
+  };
+
+  const syncCancelReasonUI = () => {
+    const shouldShow = statusSelect && statusSelect.value === 'cancelled';
+    if (cancelReasonSection) cancelReasonSection.classList.toggle('hidden', !shouldShow);
+    if (!shouldShow) {
+      cancelReasonOptions.forEach((checkbox) => { checkbox.checked = false; });
+    }
+  };
 
   const setDisabled = (disabled) => {
     if (statusSelect) statusSelect.disabled = disabled;
@@ -107,6 +128,12 @@ document.addEventListener('DOMContentLoaded', () => {
       };
       statusSelect.value = aliases[data.status] || data.status || 'pending';
     }
+
+    const existingReasons = parseCancelReasons(data.cancel_reason);
+    cancelReasonOptions.forEach((checkbox) => {
+      checkbox.checked = existingReasons.includes(checkbox.value);
+    });
+    syncCancelReasonUI();
 
     if (data.payment_proof_url) {
       paymentProofLink.href = data.payment_proof_url;
@@ -155,18 +182,28 @@ document.addEventListener('DOMContentLoaded', () => {
   const save = async () => {
     if (!id) return;
     try {
+      const selectedStatus = statusSelect ? statusSelect.value : 'pending';
+      const selectedReasons = cancelReasonOptions.filter((checkbox) => checkbox.checked).map((checkbox) => checkbox.value);
+      if (selectedStatus === 'cancelled' && selectedReasons.length === 0) {
+        toast('กรุณาเลือกเหตุผลการยกเลิกอย่างน้อย 1 ข้อ', 'error');
+        return;
+      }
+
       setDisabled(true);
       const resp = await fetch(`/api/orders/${encodeURIComponent(id)}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: statusSelect ? statusSelect.value : 'pending' })
+        body: JSON.stringify({
+          status: selectedStatus,
+          cancel_reason: selectedStatus === 'cancelled' ? selectedReasons : null,
+        })
       });
       const json = await resp.json().catch(() => null);
       if (!resp.ok || !json || json.success !== true) {
         throw new Error(json?.message || 'บันทึกไม่สำเร็จ');
       }
 
-      toast('ยอมรับคำสั่งซื้อเรียบร้อย', 'success');
+      toast('บันทึกสถานะเรียบร้อยแล้ว', 'success');
       setTimeout(() => {
         window.location.href = '/owner-orders.html';
       }, 600);
@@ -181,6 +218,8 @@ document.addEventListener('DOMContentLoaded', () => {
     e.preventDefault();
     save();
   });
+
+  statusSelect?.addEventListener('change', syncCancelReasonUI);
 
   fetchDetail();
 });
