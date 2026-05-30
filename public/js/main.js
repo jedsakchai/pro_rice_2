@@ -128,8 +128,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 </li>`;
             }
             
-            // Append notification bell + role-based items
-            ul.insertAdjacentHTML('beforeend', notificationBellHtml + buildItems(isMobile));
+            // Desktop: place the bell before the main navigation links
+            if (notificationBellHtml) {
+                ul.insertAdjacentHTML('afterbegin', notificationBellHtml);
+            }
+
+            // Append role-based items after the existing core links
+            ul.insertAdjacentHTML('beforeend', buildItems(isMobile));
             // Bind logout
             ul.querySelectorAll('[data-action="logout"]').forEach(el => {
                 el.addEventListener('click', (e) => {

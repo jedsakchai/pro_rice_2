@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const sessionVillagerId = getSessionVillagerId();
   const orderPreviewKey = sessionVillagerId ? `rice_mill_order_preview_v_${sessionVillagerId}` : 'rice_mill_order_preview_guest';
   const cartKey = sessionVillagerId ? `rice_mill_cart_v_${sessionVillagerId}` : 'rice_mill_cart_guest';
+  const cartSelectionKey = sessionVillagerId ? `rice_mill_cart_unselected_v_${sessionVillagerId}` : 'rice_mill_cart_unselected_guest';
 
   const summaryEl = document.getElementById('summary-items');
   const subtotalEl = document.getElementById('subtotal');
@@ -98,6 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let cart = JSON.parse(cartRaw || '[]');
   let preview = JSON.parse(previewRaw || 'null');
+  let orderItems = Array.isArray(preview?.items) && preview.items.length > 0 ? preview.items : cart;
 
   async function hydrateProductsForCheckout() {
     try {
@@ -111,7 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
         products = Array.isArray(json?.data) ? json.data : [];
       }
       const byId = new Map(products.map(p => [Number(p.product_id), p]));
-      cart = cart.map(item => {
+      orderItems = orderItems.map(item => {
         const product = byId.get(Number(item.product_id));
         if (!product) return item;
         return {
@@ -147,14 +149,14 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function renderSummary(){
-    if (!cart || cart.length === 0) {
+    if (!orderItems || orderItems.length === 0) {
       summaryEl.innerHTML = '<div class="text-sm text-gray-600">ตะกร้าว่าง</div>';
       subtotalEl.textContent = formatV(0);
       shippingFeeEl.textContent = formatV(0);
       grandTotalEl.textContent = formatV(0);
       return;
     }
-    const rows = groupCartByMill(cart).map(group => {
+    const rows = groupCartByMill(orderItems).map(group => {
       const millName = group.items[0]?.mill_name_th || group.items[0]?.mill_name || `โรงสี ID: ${group.millId}`;
       const groupRows = group.items.map(it => `
         <div class="flex justify-between items-center pl-3 border-l-2 border-gray-200">
@@ -175,7 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }).join('');
     summaryEl.innerHTML = rows;
 
-    const subtotal = cart.reduce((s,i)=>s + (Number(i.price||0)*Number(i.quantity||0)), 0);
+    const subtotal = orderItems.reduce((s,i)=>s + (Number(i.price||0)*Number(i.quantity||0)), 0);
     subtotalEl.textContent = formatV(subtotal);
 
     const shipMethod = (document.querySelector('input[name="shipping_method"]:checked') || {}).value || 'delivery';
@@ -243,11 +245,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!shipName.value.trim()) { window.FormUtils.showToast('กรุณากรอกชื่อผู้รับ','error'); return; }
     if (!shipPhone.value.trim() || !window.FormUtils.isValidPhoneNumber(shipPhone.value.trim())) { window.FormUtils.showToast('กรุณากรอกเบอร์โทรศัพท์ให้ถูกต้อง','error'); return; }
     if (!shipAddress.value.trim()) { window.FormUtils.showToast('กรุณากรอกที่อยู่โดยละเอียด','error'); return; }
-    if (!cart || cart.length === 0) { window.FormUtils.showToast('ตะกร้าว่าง','error'); return; }
+    if (!orderItems || orderItems.length === 0) { window.FormUtils.showToast('ตะกร้าว่าง','error'); return; }
 
     const shipMethod = (document.querySelector('input[name="shipping_method"]:checked') || {}).value || 'delivery';
     const paymentMethod = (document.querySelector('input[name="payment_method"]:checked') || {}).value || 'bank_transfer';
-    const subtotal = cart.reduce((s,i)=>s + (Number(i.price||0)*Number(i.quantity||0)), 0);
+    const subtotal = orderItems.reduce((s,i)=>s + (Number(i.price||0)*Number(i.quantity||0)), 0);
     const shippingFee = shipMethod === 'delivery' ? 10.00 : 0.00;
     const total = subtotal + shippingFee;
 
@@ -259,12 +261,12 @@ document.addEventListener('DOMContentLoaded', () => {
       shipping_fee: shippingFee,
       payment_method: paymentMethod,
       note: orderNote.value?.trim() || '',
-      items: cart.map(i => ({ product_id: i.product_id, product_name_th: i.product_name_th, price: i.price, quantity: i.quantity, subtotal: i.price * i.quantity })),
+      items: orderItems.map(i => ({ product_id: i.product_id, product_name_th: i.product_name_th, price: i.price, quantity: i.quantity, subtotal: i.price * i.quantity })),
       total,
       villager_id: window.OwnerSession?.get?.()?.villager_id || null
     };
 
-    const groupedItems = groupCartByMill(cart);
+    const groupedItems = groupCartByMill(orderItems);
     if (groupedItems.length > 1) {
       payload.orders = groupedItems.map((group, index) => {
         const subtotal = group.items.reduce((sum, item) => sum + (Number(item.price || 0) * Number(item.quantity || 0)), 0);
@@ -313,6 +315,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // Clear cart and preview
       localStorage.removeItem(cartKey);
       localStorage.removeItem(orderPreviewKey);
+      localStorage.removeItem(cartSelectionKey);
 
       // Show success message and order number
       const resultEl = document.getElementById('checkout-result');

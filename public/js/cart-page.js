@@ -15,7 +15,13 @@ function getOrderPreviewStorageKey() {
   return villagerId ? `rice_mill_order_preview_v_${villagerId}` : 'rice_mill_order_preview_guest';
 }
 
+function getCartSelectionStorageKey() {
+  const villagerId = getSessionVillagerId();
+  return villagerId ? `rice_mill_cart_unselected_v_${villagerId}` : 'rice_mill_cart_unselected_guest';
+}
+
 let cart = [];
+let unselectedCartProductIds = new Set();
 
 function enrichCartItem(item) {
   const product = (window.__allProductsForCart || []).find(p => Number(p.product_id) === Number(item.product_id));
@@ -48,7 +54,26 @@ function loadCart() {
   }
   cart = stored ? JSON.parse(stored) : [];
   cart = cart.map(enrichCartItem);
+  loadCartSelection();
   displayCart();
+}
+
+function loadCartSelection() {
+  const raw = localStorage.getItem(getCartSelectionStorageKey());
+  let parsed = [];
+  try {
+    parsed = raw ? JSON.parse(raw) : [];
+  } catch {
+    parsed = [];
+  }
+  if (!Array.isArray(parsed)) parsed = [];
+  const validIds = new Set(cart.map(item => String(item.product_id)));
+  unselectedCartProductIds = new Set(parsed.map((value) => String(value)).filter((value) => validIds.has(value)));
+  saveCartSelection();
+}
+
+function saveCartSelection() {
+  localStorage.setItem(getCartSelectionStorageKey(), JSON.stringify(Array.from(unselectedCartProductIds)));
 }
 
 async function hydrateProductsForCart() {
@@ -70,13 +95,64 @@ async function hydrateProductsForCart() {
 
 // Save cart to localStorage
 function saveCart() {
+  const validIds = new Set(cart.map(item => String(item.product_id)));
+  unselectedCartProductIds = new Set(Array.from(unselectedCartProductIds).filter((value) => validIds.has(String(value))));
+  saveCartSelection();
   localStorage.setItem(getCartStorageKey(), JSON.stringify(cart));
+  displayCart();
+}
+
+function getSelectedCartItems() {
+  return cart.filter((item) => !unselectedCartProductIds.has(String(item.product_id)));
+}
+
+function syncMillCheckboxState(millId) {
+  const section = document.querySelector(`[data-mill-section="${CSS.escape(String(millId))}"]`);
+  if (!section) return;
+  const checkbox = section.querySelector('[data-mill-select-all]');
+  if (!checkbox) return;
+  const rowCheckboxes = Array.from(section.querySelectorAll('[data-cart-item-checkbox]'));
+  const checkedCount = rowCheckboxes.filter((input) => input.checked).length;
+  checkbox.checked = rowCheckboxes.length > 0 && checkedCount === rowCheckboxes.length;
+  checkbox.indeterminate = checkedCount > 0 && checkedCount < rowCheckboxes.length;
+}
+
+function syncAllMillCheckboxStates() {
+  document.querySelectorAll('[data-mill-select-all]').forEach((checkbox) => {
+    const millId = checkbox.getAttribute('data-mill-id');
+    syncMillCheckboxState(millId);
+  });
+}
+
+function toggleCartSelection(productId, checked) {
+  const id = String(productId);
+  if (checked) {
+    unselectedCartProductIds.delete(id);
+  } else {
+    unselectedCartProductIds.add(id);
+  }
+  saveCartSelection();
+  displayCart();
+}
+
+function toggleMillSelection(millId, checked) {
+  cart.forEach((item) => {
+    if (String(item.mill_id || 'unknown') !== String(millId)) return;
+    const id = String(item.product_id);
+    if (checked) {
+      unselectedCartProductIds.delete(id);
+    } else {
+      unselectedCartProductIds.add(id);
+    }
+  });
+  saveCartSelection();
   displayCart();
 }
 
 // Display cart
 function displayCart() {
   const container = document.getElementById('cart-content');
+  const selectedItems = getSelectedCartItems();
   
   if (cart.length === 0) {
     container.innerHTML = `
@@ -111,15 +187,25 @@ function displayCart() {
     let millTotal = 0;
     let millItemCount = 0;
     const millName = items[0]?.item?.mill_name_th || items[0]?.item?.mill_name || `โรงสี ID: ${millId}`;
+    const selectedMillItems = items.filter(({ item }) => !unselectedCartProductIds.has(String(item.product_id)));
+    const isMillSelectedAll = items.length > 0 && selectedMillItems.length === items.length;
     
     const tableRows = items.map(({ item, index }) => {
     const itemTotal = item.price * item.quantity;
-    millTotal += itemTotal;
-    millItemCount += item.quantity;
+    const isSelected = !unselectedCartProductIds.has(String(item.product_id));
+    if (isSelected) {
+      millTotal += itemTotal;
+      millItemCount += item.quantity;
+    }
     const imageUrl = item.has_image ? `/api/products/${item.product_id}/image` : (item.image_url || '/images/placeholder.jpg');
     
     return `
-      <tr data-cart-index="${index}">
+      <tr data-cart-index="${index}" class="${isSelected ? '' : 'opacity-50'}">
+        <td data-col="select" style="width: 3rem; vertical-align: top;">
+          <label class="inline-flex items-center justify-center h-10 w-10 rounded-full border border-gray-200 bg-white cursor-pointer">
+            <input type="checkbox" data-cart-item-checkbox="true" ${isSelected ? 'checked' : ''} onchange="toggleCartSelection(${item.product_id}, this.checked)">
+          </label>
+        </td>
         <td data-col="product">
           <div class="cart-col-label">สินค้า</div>
           <div style="display: flex; gap: 1rem; align-items: center;">
@@ -163,12 +249,19 @@ function displayCart() {
     itemCountAllMills += millItemCount;
     
     html += `
-      <div class="mill-section" style="margin-bottom: 2rem; padding: 1rem; background-color: #f9f9f9; border-radius: 8px; border-left: 4px solid #8B5D3C;">
-        <h3 style="font-weight: bold; color: #333; margin-bottom: 1rem;">${millName}</h3>
+      <div class="mill-section" data-mill-section="${String(millId)}" style="margin-bottom: 2rem; padding: 1rem; background-color: #f9f9f9; border-radius: 8px; border-left: 4px solid #8B5D3C;">
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap;">
+          <label style="display: inline-flex; align-items: center; gap: 0.5rem; font-weight: bold; color: #333; cursor: pointer;">
+            <input type="checkbox" data-mill-select-all data-mill-id="${String(millId)}" ${isMillSelectedAll ? 'checked' : ''} onchange="toggleMillSelection('${String(millId)}', this.checked)">
+            <span>${millName}</span>
+          </label>
+          <div style="font-size: 0.95rem; color: #666;">เลือกแล้ว ${selectedMillItems.length}/${items.length} รายการ</div>
+        </div>
         <div class="cart-table-wrap">
           <table class="cart-table">
           <thead>
             <tr>
+              <th>เลือก</th>
               <th>สินค้า</th>
               <th>ราคาต่อหน่วย</th>
               <th>จำนวน</th>
@@ -194,28 +287,30 @@ function displayCart() {
     
     <div class="cart-summary">
       <div class="summary-row">
-        <span class="summary-label">จำนวนรายการ:</span>
-        <span class="summary-value">${itemCountAllMills} ชิ้น</span>
+        <span class="summary-label">จำนวนที่เลือก:</span>
+        <span class="summary-value">${selectedItems.reduce((sum, item) => sum + item.quantity, 0)} ชิ้น จาก ${itemCountAllMills} ชิ้น</span>
       </div>
       <div class="summary-row">
-        <span class="summary-label">ราคารวม:</span>
-        <span class="summary-value">฿${totalAllMills.toFixed(2)}</span>
+        <span class="summary-label">ราคารวมที่เลือก:</span>
+        <span class="summary-value">฿${selectedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2)}</span>
       </div>
       <div class="summary-row total">
         <span>รวมทั้งสิ้น:</span>
-        <span>฿${totalAllMills.toFixed(2)}</span>
+        <span>฿${selectedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2)}</span>
       </div>
       
       <div class="cart-actions">
         <a href="/order.html" class="btn-secondary">
           เลือกสินค้าเพิ่มเติม
         </a>
-        <button class="btn-primary" onclick="checkout()">
+        <button class="btn-primary ${selectedItems.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}" onclick="checkout()" ${selectedItems.length === 0 ? 'disabled' : ''}>
           ดำเนินการสั่งซื้อ
         </button>
       </div>
     </div>
   `;
+
+  syncAllMillCheckboxStates();
 }
 
 // Change quantity in cart
@@ -248,6 +343,7 @@ function validateCartQuantity(index) {
 function removeFromCart(index) {
   const item = cart[index];
   if (confirm(`ต้องการลบ "${item.product_name_th}" ออกจากตะกร้าหรือไม่?`)) {
+    unselectedCartProductIds.delete(String(item.product_id));
     cart.splice(index, 1);
     saveCart();
   }
@@ -255,14 +351,19 @@ function removeFromCart(index) {
 
 // Checkout
 function checkout() {
+  const selectedItems = getSelectedCartItems();
   if (cart.length === 0) {
     alert('ตะกร้าว่างเปล่า');
+    return;
+  }
+  if (selectedItems.length === 0) {
+    alert('กรุณาเลือกสินค้าอย่างน้อย 1 รายการ');
     return;
   }
   
   // Prepare order data
   const orderData = {
-    items: cart.map(item => ({
+    items: selectedItems.map(item => ({
       product_id: item.product_id,
       product_name_th: item.product_name_th,
       price: item.price,
@@ -271,8 +372,8 @@ function checkout() {
       mill_id: item.mill_id || null,
       mill_name: item.mill_name || item.mill_name_th || ''
     })),
-    total: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0),
-    itemCount: cart.reduce((sum, item) => sum + item.quantity, 0)
+    total: selectedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0),
+    itemCount: selectedItems.reduce((sum, item) => sum + item.quantity, 0)
   };
   
   // Save order data temporarily
