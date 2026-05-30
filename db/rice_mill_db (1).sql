@@ -120,9 +120,9 @@ CREATE TABLE `mills` (
 --
 
 INSERT INTO `mills` (`mill_id`, `mill_name`, `mill_name_th`, `location`, `location_th`, `phone`, `email`, `latitude`, `longitude`, `operating_hours_start`, `operating_hours_end`, `capacity_per_day`, `created_at`, `updated_at`, `is_active`) VALUES
-(1, 'Central Mill', 'โรงสีกลาง', '123 Thep Satit Rd., Udon Thani', '123 ถนนเทพสถิต จังหวัดอุดรธานี', '081-234-5678', 'central@ricemillsite.com', NULL, NULL, '06:00:00', '20:00:00', 500, '2026-05-16 05:40:12', '2026-05-16 06:13:06', 1),
-(2, 'Northern Mill', 'โรงสีเหนือ', '456 Chiang Mai Rd., Chiang Mai', '456 ถนนเชียงใหม่ จังหวัดเชียงใหม่', '085-987-6543', 'north@ricemillsite.com', NULL, NULL, '07:00:00', '19:00:00', 300, '2026-05-16 05:40:12', '2026-05-16 06:13:06', 1),
-(3, 'Southern Mill', 'โรงสีใต้ พรีเมียม', '789 Petchkasem Rd., Songkhla', '789 ถนนเพชรเกษม จังหวัดสงขลา', '086-456-7890', 'south@ricemillsite.com', NULL, NULL, '06:00:00', '19:00:00', 450, '2026-05-16 05:40:12', '2026-05-16 06:13:06', 1);
+(1, 'Central Mill', 'โรงสีบ้านบางกระวาน', '123 Thep Satit Rd., Udon Thani', '123 ถนนเทพสถิต จังหวัดอุดรธานี', '081-234-5678', 'central@ricemillsite.com', NULL, NULL, '06:00:00', '20:00:00', 500, '2026-05-16 05:40:12', '2026-05-16 06:13:06', 1),
+(2, 'Northern Mill', 'โรงสีบ้านปรือคัน', '456 Chiang Mai Rd., Chiang Mai', '456 ถนนเชียงใหม่ จังหวัดเชียงใหม่', '085-987-6543', 'north@ricemillsite.com', NULL, NULL, '07:00:00', '19:00:00', 300, '2026-05-16 05:40:12', '2026-05-16 06:13:06', 1),
+(3, 'Southern Mill', 'โรงสีบ้านเนินเเสง', '789 Petchkasem Rd., Songkhla', '789 ถนนเพชรเกษม จังหวัดสงขลา', '086-456-7890', 'south@ricemillsite.com', NULL, NULL, '06:00:00', '19:00:00', 450, '2026-05-16 05:40:12', '2026-05-16 06:13:06', 1),
 
 -- --------------------------------------------------------
 

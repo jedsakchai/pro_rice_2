@@ -80,9 +80,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (thaiName && !isAllQuestionMarks(thaiName)) return thaiName;
 
         // Fallback mapping (matches the home page cards)
-        if (id === 1) return 'โรงสีจังหวัลอยกลาง';
-        if (id === 2) return 'โรงสีเหนือวิลเลจ';
-        if (id === 3) return 'โรงสีใต้ พรีเมี่ยม';
+        if (id === 1) return 'โรงสีบ้านบางกระวาน';
+        if (id === 2) return 'โรงสีบ้านปรือคัน';
+        if (id === 3) return 'โรงสีบ้านเนินเเสง';
 
         if (engName) return engName;
         return '-';

@@ -15,8 +15,8 @@ async function ensure() {
          (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?),
          (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
-          'white_rice', 'ข้าวสาร', 'Northern Jasmine', 'ข้าวหอมมะลิเหนือ', 'Fragrant rice from northern mill', 'ข้าวหอมมะลิจากโรงสีเหนือ', '48.00', '1 kg.', '1 กก.', 80, '/images/rice-1.jpg', 2, 1,
-          'broken_rice', 'ปลายข้าว', 'Northern Broken', 'ปลายข้าวเหนือ', 'Broken rice from northern mill', 'ปลายข้าวจากโรงสีเหนือ', '20.00', '1 kg.', '1 กก.', 120, '/images/rice-3.jpg', 2, 1
+          'white_rice', 'ข้าวสาร', 'Northern Jasmine', 'ข้าวหอมมะลิเหนือ', 'Fragrant rice from โรงสีบ้านปรือคัน', 'ข้าวหอมมะลิจากโรงสีบ้านปรือคัน', '48.00', '1 kg.', '1 กก.', 80, '/images/rice-1.jpg', 2, 1,
+          'broken_rice', 'ปลายข้าว', 'Northern Broken', 'ปลายข้าวเหนือ', 'Broken rice from โรงสีบ้านปรือคัน', 'ปลายข้าวจากโรงสีบ้านปรือคัน', '20.00', '1 kg.', '1 กก.', 120, '/images/rice-3.jpg', 2, 1
         ]
       );
     } else {
@@ -31,8 +31,8 @@ async function ensure() {
          (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?),
          (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
-          'husk', 'แกลบ', 'Southern Husk', 'แกลบใต้', 'Rice husk from southern mill', 'แกลบจากโรงสีใต้', '14.00', '1 sack', '1 กระสอบ', 50, '/images/rice-4.jpg', 3, 1,
-          'rice_bran', 'รำข้าว', 'Southern Bran', 'รำข้าวใต้', 'Rice bran from southern mill', 'รำข้าวจากโรงสีใต้', '22.00', '1 kg.', '1 กก.', 70, '/images/rice-2.png', 3, 1
+          'husk', 'แกลบ', 'Southern Husk', 'แกลบใต้', 'Rice husk from โรงสีบ้านเนินเเสง', 'แกลบจากโรงสีบ้านเนินเเสง', '14.00', '1 sack', '1 กระสอบ', 50, '/images/rice-4.jpg', 3, 1,
+          'rice_bran', 'รำข้าว', 'Southern Bran', 'รำข้าวใต้', 'Rice bran from โรงสีบ้านเนินเเสง', 'รำข้าวจากโรงสีบ้านเนินเเสง', '22.00', '1 kg.', '1 กก.', 70, '/images/rice-2.png', 3, 1
         ]
       );
     } else {

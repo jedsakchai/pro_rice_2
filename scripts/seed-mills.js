@@ -5,7 +5,7 @@ async function main() {
     {
       mill_id: 1,
       mill_name: 'Central Mill',
-      mill_name_th: 'โรงสีกลาง',
+      mill_name_th: 'โรงสีบ้านบางกระวาน',
       location: '123 Thep Satit Rd., Udon Thani',
       location_th: '123 ถนนเทพสถิต จังหวัดอุดรธานี',
       phone: '081-234-5678',
@@ -17,7 +17,7 @@ async function main() {
     {
       mill_id: 2,
       mill_name: 'Northern Mill',
-      mill_name_th: 'โรงสีเหนือ',
+      mill_name_th: 'โรงสีบ้านปรือคัน',
       location: '456 Chiang Mai Rd., Chiang Mai',
       location_th: '456 ถนนเชียงใหม่ จังหวัดเชียงใหม่',
       phone: '085-987-6543',
@@ -29,7 +29,7 @@ async function main() {
     {
       mill_id: 3,
       mill_name: 'Southern Mill',
-      mill_name_th: 'โรงสีใต้ พรีเมียม',
+      mill_name_th: 'โรงสีบ้านเนินเเสง',
       location: '789 Petchkasem Rd., Songkhla',
       location_th: '789 ถนนเพชรเกษม จังหวัดสงขลา',
       phone: '086-456-7890',

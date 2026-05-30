@@ -248,16 +248,16 @@ CREATE TABLE IF NOT EXISTS products (
 -- Seed mills if empty
 INSERT INTO mills (mill_id, mill_name, mill_name_th, location, location_th, phone, email, capacity_per_day, operating_hours_start, operating_hours_end)
 SELECT * FROM (
-  SELECT 1 AS mill_id, 'Central Mill' AS mill_name, 'โรงสีจังหวัลอยกลาง' AS mill_name_th,
+    SELECT 1 AS mill_id, 'Central Mill' AS mill_name, 'โรงสีบ้านบางกระวาน' AS mill_name_th,
          '123 Thep Satit Rd., Udon Thani' AS location, '123 ถนนเทพสถิต จังหวัดอุดรธานี' AS location_th,
          '081-234-5678' AS phone, 'central@ricemillsite.com' AS email, 500 AS capacity_per_day,
          '06:00:00' AS operating_hours_start, '20:00:00' AS operating_hours_end
   UNION ALL
-  SELECT 2, 'Northern Mill', 'โรงสีเหนือวิลเลจ',
+    SELECT 2, 'Northern Mill', 'โรงสีบ้านปรือคัน',
          '456 Mittraphap Rd., Nakhon Ratchasima', '456 ถนนมิตรภาพ จังหวัดนครราชสีมา',
          '089-345-6789', 'north@ricemillsite.com', 400, '07:00:00', '18:00:00'
   UNION ALL
-  SELECT 3, 'Southern Mill', 'โรงสีใต้ พรีเมี่ยม',
+    SELECT 3, 'Southern Mill', 'โรงสีบ้านเนินเเสง',
          '789 Petchkasem Rd., Songkhla', '789 ถนนเพชรเกษม จังหวัดสงขลา',
          '086-456-7890', 'south@ricemillsite.com', 450, '06:00:00', '19:00:00'
 ) AS seed
