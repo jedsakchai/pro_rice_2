@@ -103,6 +103,15 @@ function formatShortDate(dateString) {
     return date.toLocaleDateString('th-TH', options);
 }
 
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 function displayNotifications(items) {
     // legacy; not used directly anymore
     document.getElementById('notification-list').innerHTML = '<div class="text-center text-gray-600 py-12">ไม่มีการแจ้งเตือน</div>';
@@ -185,7 +194,7 @@ function renderNotifications(filterTab = 'all', typeFilter = 'all') {
         const unreadDot = item.is_read ? '' : '<span class="inline-block w-3 h-3 bg-rice-700 rounded-full mr-3"></span>';
 
         const label = item.type === 'order' ? 'สถานะการคำสั่งซื้อ:' : 'สถานะการคำขอสีข้าว:';
-        const note = 'คลิกเพื่อดูรายละเอียด';
+        const note = escapeHtml(item.message || 'คลิกเพื่อดูรายละเอียด');
         const statusLabel = statusInfo.th;
 
         // link target
@@ -210,7 +219,7 @@ function renderNotifications(filterTab = 'all', typeFilter = 'all') {
                                         <div class="space-y-1">
                                             <h3 class="notif-title text-base font-semibold text-gray-800">${label}</h3>
                                             <div class="text-base font-semibold ${colorClass} inline-flex items-center rounded-full border px-3 py-1">${statusLabel}</div>
-                                            <p class="notif-detail text-sm text-gray-500">หมายเหตุ: ${note}</p>
+                                            <p class="notif-detail text-sm text-gray-500">${note}</p>
                                             <div class="notif-date text-sm text-gray-400">${formatShortDate(item.created_at)}</div>
                                         </div>
                                     </div>

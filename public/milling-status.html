@@ -71,7 +71,6 @@
             <div><strong>วันส่งขึ้น:</strong> ${req.dropoff_date}</div>
             <div><strong>วันที่คาดว่าเสร็จ:</strong> ${req.expected_return_date}</div>
             <div class="flex items-center gap-3 flex-nowrap overflow-x-auto"><strong class="shrink-0">สถานะ:</strong> <span class="font-semibold text-rice-700 shrink-0 whitespace-nowrap">${statusMap[req.status] || req.status || 'ไม่ทราบ'}</span><a href="/notification-detail.html?type=milling&resource_id=${encodeURIComponent(req.request_id)}" class="shrink-0 inline-flex items-center rounded-full border border-rice-700 px-3 py-1 text-sm font-semibold text-rice-700 whitespace-nowrap hover:bg-rice-50">ดูเพิ่มเติม</a></div>
-            <div><strong>หมายเหตุ:</strong> ${req.notes || '-'}</div>
           </div>
         `;
       } catch (err) {

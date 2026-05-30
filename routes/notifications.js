@@ -146,12 +146,25 @@ function buildCancellationMessage(type, status) {
     : cancellationLabel(status);
 }
 
+function buildOwnerCancellationMessage(type, cancelReason) {
+  const reasonText = String(cancelReason || '').trim();
+  if (reasonText) {
+    return type === 'order'
+      ? `ออเดอร์ถูกยกเลิกโดยเจ้าของโรงสี: ${reasonText}`
+      : `คำขอสีข้าวถูกยกเลิกโดยเจ้าของโรงสี: ${reasonText}`;
+  }
+
+  return type === 'order'
+    ? 'ออเดอร์ถูกยกเลิกโดยเจ้าของโรงสี'
+    : 'คำขอสีข้าวถูกยกเลิกโดยเจ้าของโรงสี';
+}
+
 async function loadCancellationResource(conn, type, resourceId) {
   const config = CANCELLATION_CONFIG[type];
   if (!config) return null;
 
   const [rows] = await conn.query(
-    `SELECT ${config.idColumn} AS resource_id, ${config.ownerColumn} AS owner_id, ${config.millColumn} AS mill_id, status
+    `SELECT ${config.idColumn} AS resource_id, ${config.ownerColumn} AS owner_id, ${config.millColumn} AS mill_id, status, cancel_reason, cancelled_at
      FROM ${config.table}
      WHERE ${config.idColumn} = ?
      LIMIT 1`,
@@ -425,7 +438,6 @@ router.get('/count', async (req, res) => {
       );
       const unread = dedupeLatestByThread(notificationRows)
         .filter((row) => !Number(row.is_read))
-        .filter((row) => !['completed', 'cancelled', 'delivered'].includes(String(row.status || '')))
         .length;
       return res.json({
         success: true,
@@ -439,18 +451,18 @@ router.get('/count', async (req, res) => {
       console.error('notifications unread count fallback:', tableErr && tableErr.message);
     }
 
-    // Count non-final orders (not completed or cancelled)
+    // Count order threads that still have customer-visible notifications
     const [orderRows] = await pool.query(
       `SELECT COUNT(*) as count FROM orders 
-       WHERE villager_id = ? AND status NOT IN ('completed', 'cancelled')`,
+       WHERE villager_id = ? AND status NOT IN ('cancelled')`,
       [villager_id]
     );
     const pending_orders = (orderRows && orderRows[0] && orderRows[0].count) || 0;
 
-    // Count non-final milling requests (not completed or cancelled)
+    // Count milling threads that still have customer-visible notifications
     const [millingRows] = await pool.query(
       `SELECT COUNT(*) as count FROM milling_requests 
-       WHERE submitted_by = ? AND status NOT IN ('completed', 'cancelled')`,
+       WHERE submitted_by = ? AND status NOT IN ('cancelled')`,
       [villager_id]
     );
     const pending_milling = (millingRows && millingRows[0] && millingRows[0].count) || 0;
@@ -471,7 +483,7 @@ router.get('/count', async (req, res) => {
   }
 });
 
-// GET /api/notifications/items — ดึงรายละเอียดการแจ้งเตือนทั้งหมด (orders + milling requests ที่ยังไม่เสร็จ)
+// GET /api/notifications/items — ดึงรายละเอียดการแจ้งเตือนทั้งหมด (orders + milling requests)
 router.get('/items', async (req, res) => {
     try {
     const session = parseSessionFromHeader(req);
@@ -493,17 +505,28 @@ router.get('/items', async (req, res) => {
       );
 
       // Return only the latest notification for each type/resource thread.
-      const mapped = dedupeLatestByThread(Array.isArray(notes) ? notes : [])
-        .filter((r) => !['completed', 'cancelled', 'delivered'].includes(String(r.status || '')))
-        .map((r) => ({
-        id: threadKey(r.type, r.resource_id),
-        type: r.type,
-        resource_id: r.resource_id,
-        status: r.status,
-        message: r.message,
-        is_read: !!r.is_read,
-        created_at: r.created_at
-      }));
+      const mapped = [];
+      const latestRows = dedupeLatestByThread(Array.isArray(notes) ? notes : []);
+
+      for (const row of latestRows) {
+        let message = row.message;
+        if (String(row.status || '').trim() === 'cancelled') {
+          const resource = await loadCancellationResource(pool, row.type, row.resource_id);
+          if (resource) {
+            message = buildOwnerCancellationMessage(row.type, resource.cancel_reason);
+          }
+        }
+
+        mapped.push({
+          id: threadKey(row.type, row.resource_id),
+          type: row.type,
+          resource_id: row.resource_id,
+          status: row.status,
+          message,
+          is_read: !!row.is_read,
+          created_at: row.created_at,
+        });
+      }
       return res.json({ success: true, data: mapped });
     } catch (e) {
       // If notifications table doesn't exist, fall back to derived queries
@@ -519,7 +542,7 @@ router.get('/items', async (req, res) => {
         created_at,
         'order' as type
        FROM orders 
-      WHERE villager_id = ? AND status NOT IN ('completed', 'cancelled', 'delivered')
+      WHERE villager_id = ? AND status NOT IN ('cancelled')
        ORDER BY created_at DESC`,
       [villager_id]
     );
@@ -533,7 +556,7 @@ router.get('/items', async (req, res) => {
         created_at,
         'milling' as type
        FROM milling_requests 
-      WHERE submitted_by = ? AND status NOT IN ('delivered', 'cancelled', 'completed')
+      WHERE submitted_by = ? AND status NOT IN ('cancelled')
        ORDER BY created_at DESC`,
       [villager_id]
     );

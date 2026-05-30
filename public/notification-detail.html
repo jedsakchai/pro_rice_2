@@ -367,18 +367,6 @@
 
             <div id="cancellation-banner" class="hidden rounded-[1.5rem] px-4 py-4 text-sm sm:px-5 sm:text-base"></div>
 
-            <div id="resource-note-card" class="hidden rounded-[1.5rem] px-4 py-4 sm:px-5 sm:py-5">
-              <div class="flex items-start gap-3">
-                <span class="icon-surface mt-0.5">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4.5 w-4.5"><path d="M14 2H7a2 2 0 0 0-2 2v16l5-3 5 3 5-3V8z"></path></svg>
-                </span>
-                <div>
-                  <div class="text-sm font-semibold text-gray-700">หมายเหตุ</div>
-                  <div id="resource-note" class="mt-1 text-sm text-gray-600">-</div>
-                </div>
-              </div>
-            </div>
-
             <div id="timeline-empty" class="hidden rounded-[1.5rem] border border-dashed border-green-200 bg-white/65 px-6 py-16 text-center text-gray-500 shadow-sm">
               ยังไม่มีประวัติสถานะสำหรับรายการนี้
             </div>
@@ -400,8 +388,6 @@
       <form id="cancel-form" class="flex min-h-0 flex-col">
         <div class="min-h-0 flex-1 overflow-y-auto px-5 py-4 sm:px-6">
           <div id="cancel-choices" class="space-y-3"></div>
-          <label class="mt-5 block text-sm font-semibold text-gray-700" for="cancel-additional-note">หมายเหตุเพิ่มเติม (ไม่บังคับ)</label>
-          <textarea id="cancel-additional-note" class="mt-2 w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm text-gray-700 outline-none transition focus:border-rice-700 focus:ring-2 focus:ring-rice-100" rows="4" placeholder="ระบุรายละเอียดเพิ่มเติม"></textarea>
         </div>
         <div class="border-t border-gray-100 px-5 py-4 sm:px-6">
           <div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
@@ -573,18 +559,35 @@
       return statusLabel(currentDetailType || 'order', status);
     }
 
-    function updateCancellationBanner(status) {
+    function buildOwnerCancellationText(resource, cancellation) {
+      const type = currentDetailType || 'order';
+      if (cancellation?.status === 'approved_cancel') {
+        return 'คำขอยกเลิกได้รับการยอมรับจากเจ้าของโรงสีแล้ว';
+      }
+
+      const reasonText = String(resource?.cancel_reason || cancellation?.resource_status || '').trim();
+      const base = type === 'order'
+        ? 'ออเดอร์ถูกยกเลิกโดยเจ้าของโรงสี'
+        : 'คำขอสีข้าวถูกยกเลิกโดยเจ้าของโรงสี';
+      return reasonText ? `${base}: ${reasonText}` : base;
+    }
+
+    function updateCancellationBanner(status, resource = null, cancellation = null) {
       const banner = document.getElementById('cancellation-banner');
       if (!banner) return;
 
-      if (!status) {
+      const resourceStatus = String(resource?.status || '').trim();
+      const cancelledByOwner = resourceStatus === 'cancelled' || status === 'approved_cancel';
+      if (!status && !cancelledByOwner) {
         banner.className = 'hidden rounded-[1.5rem] px-4 py-3 text-sm sm:text-base';
         banner.textContent = '';
         return;
       }
 
       banner.className = 'rounded-[1.5rem] px-4 py-3 text-sm sm:text-base';
-      if (status === 'pending_cancel') {
+      if (cancelledByOwner) {
+        banner.classList.add('border', 'border-gray-200', 'bg-gray-50', 'text-gray-700');
+      } else if (status === 'pending_cancel') {
         banner.classList.add('border', 'border-green-200', 'bg-green-50', 'text-green-900');
       } else if (status === 'approved_cancel') {
         banner.classList.add('border', 'border-green-200', 'bg-green-50', 'text-green-900');
@@ -596,42 +599,18 @@
       banner.innerHTML = `
         <div class="flex items-start gap-3">
           <span class="icon-surface mt-0.5 !h-9 !w-9 ${status === 'rejected_cancel' ? '!text-red-600' : '!text-green-700'}">
-            ${statusIcon(status)}
+            ${cancelledByOwner ? statusIcon('approved_cancel') : statusIcon(status)}
           </span>
           <div>
-            <div class="text-base font-semibold">${escapeHtml(getCancellationLabel(status))}</div>
-            <div class="mt-1 text-sm opacity-90">${escapeHtml(getStatusDescription(currentDetailType || 'milling', status))}</div>
+            <div class="text-base font-semibold">${escapeHtml(cancelledByOwner ? (currentDetailType === 'order' ? 'ยกเลิกคำสั่งซื้อสินค้าแล้ว' : 'ยกเลิกคำขอสีข้าวแล้ว') : getCancellationLabel(status))}</div>
+            <div class="mt-1 text-sm opacity-90">${escapeHtml(cancelledByOwner ? buildOwnerCancellationText(resource, cancellation) : getStatusDescription(currentDetailType || 'milling', status))}</div>
           </div>
         </div>
       `;
     }
 
     function renderResourceNote(resource) {
-      const container = document.querySelector('.mx-auto.w-full.max-w-4xl');
-      if (!container) return;
-      let noteCard = document.getElementById('resource-note-card');
-      const noteText = resource?.cancel_reason || resource?.note || resource?.notes || '-';
-
-      if (!noteCard) {
-        noteCard = document.createElement('div');
-        noteCard.id = 'resource-note-card';
-        noteCard.className = 'resource-card mb-6 rounded-[1.5rem] p-4 sm:p-5';
-        container.insertBefore(noteCard, container.children[1]);
-      }
-
-      noteCard.classList.remove('hidden');
-
-      noteCard.innerHTML = `
-        <div class="flex items-start gap-3">
-          <span class="icon-surface mt-0.5">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4.5 w-4.5"><path d="M14 2H7a2 2 0 0 0-2 2v16l5-3 5 3 5-3V8z"></path></svg>
-          </span>
-          <div>
-            <div class="text-sm font-semibold text-gray-700">หมายเหตุ</div>
-            <div class="mt-1 text-sm text-gray-600">${escapeHtml(noteText)}</div>
-          </div>
-        </div>
-      `;
+      return resource;
     }
 
     function renderCancellationReasons() {
@@ -745,7 +724,7 @@
         const json = await resp.json().catch(() => null);
         if (resp.ok && json?.success) {
           currentCancellation = json.data || null;
-          updateCancellationBanner(currentCancellation?.status || null);
+          updateCancellationBanner(currentCancellation?.status || null, resource, currentCancellation);
           syncCancellationButton(resource, currentCancellation);
           return currentCancellation;
         }
@@ -754,7 +733,7 @@
       }
 
       currentCancellation = null;
-      updateCancellationBanner(null);
+      updateCancellationBanner(null, resource, null);
       syncCancellationButton(resource, null);
       return null;
     }
@@ -841,7 +820,6 @@
           if (resourceResp.ok && resourceJson.success) {
             resource = resourceJson.data || {};
             currentResource = resource;
-            renderResourceNote(resource);
             if (items.length === 0) {
               items = buildDerivedTimeline(type, resource, items);
             }
@@ -870,7 +848,7 @@
         if (items.length === 0) {
           empty.classList.remove('hidden');
           shell.classList.add('hidden');
-          updateCancellationBanner(cancellation?.status || null);
+          updateCancellationBanner(cancellation?.status || null, resource || currentResource || null, cancellation);
           syncCancellationButton(resource || currentResource || null, cancellation);
           return;
         }
@@ -881,10 +859,6 @@
         const displayedItems = items.map((item) => {
           const short = formatShortDateTime(item.created_at);
 
-        const noteCard = document.getElementById('resource-note-card');
-        if (noteCard && !resource) {
-          noteCard.classList.add('hidden');
-        }
           return {
             ...item,
             label: statusLabel(type, item.status),

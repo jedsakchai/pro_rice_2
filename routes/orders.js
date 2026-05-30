@@ -29,6 +29,21 @@ function stringifyCancelReason(value) {
   return text ? JSON.stringify([text]) : null;
 }
 
+function formatCancelReasonSummary(value) {
+  if (!value) return '';
+  try {
+    const parsed = JSON.parse(value);
+    if (Array.isArray(parsed)) {
+      return parsed.filter(Boolean).join(', ');
+    }
+  } catch {
+    // fall through
+  }
+
+  const text = String(value || '').trim();
+  return text ? text : '';
+}
+
 function generateOrderNumber() {
   const now = Date.now();
   const r = Math.floor(Math.random() * 9000) + 1000;
@@ -459,7 +474,12 @@ router.put('/:id', async (req, res) => {
       try {
         const order = before;
         if (order && order.villager_id) {
-          const message = status === 'cancelled' ? 'ยกเลิกคำสั่งซื้อสินค้าแล้ว' : `สถานะคำสั่งซื้อเปลี่ยนเป็น ${String(status)}`;
+          const cancelSummary = status === 'cancelled' ? formatCancelReasonSummary(cancelReason) : '';
+          const message = status === 'cancelled'
+            ? (cancelSummary
+              ? `ออเดอร์ถูกยกเลิกโดยเจ้าของโรงสี: ${cancelSummary}`
+              : 'ออเดอร์ถูกยกเลิกโดยเจ้าของโรงสี')
+            : `สถานะคำสั่งซื้อเปลี่ยนเป็น ${String(status)}`;
           try {
             await conn.execute(
               'INSERT INTO notifications (villager_id, type, resource_id, status, message) VALUES (?, ?, ?, ?, ?)',
