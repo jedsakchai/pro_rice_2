@@ -58,6 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
       payment_review: 'รอตรวจสอบการชำระเงิน',
       paid: 'ชำระเงินแล้ว',
       preparing: 'กำลังเตรียมสินค้า',
+      awaiting_pickup: 'รอลูกค้ามารับสินค้า',
       ready_to_ship: 'พร้อมจัดส่ง',
       shipping: 'จัดส่งแล้ว',
       completed: 'สำเร็จ',
@@ -71,7 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (status === 'accepted') return 'border border-sky-200 bg-sky-50 text-sky-800';
     if (status === 'cancelled') return 'border border-gray-300 bg-rice-50 text-red-700';
     if (status === 'completed') return 'border border-green-200 bg-green-50 text-green-800';
-    if (['shipping','ready_to_ship','preparing'].includes(status)) return 'border border-blue-200 bg-blue-50 text-blue-800';
+    if (['shipping','ready_to_ship','awaiting_pickup','preparing'].includes(status)) return 'border border-blue-200 bg-blue-50 text-blue-800';
     if (status === 'paid') return 'border border-amber-200 bg-amber-50 text-amber-800';
     if (status === 'payment_review') return 'border border-orange-200 bg-orange-50 text-orange-800';
     return 'border border-rice-700 bg-grain-100 text-grain-600';

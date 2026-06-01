@@ -50,6 +50,7 @@ function getStatusDisplay(type, status) {
         'payment_review': { th: 'รอตรวจสอบการชำระเงิน', color: 'orange' },
         'paid': { th: 'ชำระเงินแล้ว', color: 'blue' },
         'preparing': { th: 'กำลังเตรียมสินค้า', color: 'blue' },
+        'awaiting_pickup': { th: 'รอลูกค้ามารับสินค้า', color: 'blue' },
         'ready_to_ship': { th: 'พร้อมจัดส่ง', color: 'blue' },
         'shipping': { th: 'จัดส่งแล้ว', color: 'green' },
         'completed': { th: 'สำเร็จ', color: 'green' },

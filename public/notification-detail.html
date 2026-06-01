@@ -408,6 +408,7 @@
       payment_review: 'รอตรวจสอบการชำระเงิน',
       paid: 'ชำระเงินแล้ว',
       preparing: 'กำลังเตรียมสินค้า',
+      awaiting_pickup: 'รอลูกค้ามารับสินค้า',
       ready_to_ship: 'พร้อมจัดส่ง',
       shipping: 'จัดส่งแล้ว',
       completed: 'สำเร็จ',
@@ -435,7 +436,7 @@
     };
 
     const CANCELLATION_REASONS = ['เปลี่ยนใจ', 'พบราคาถูกกว่า', 'ต้องการแก้ไขข้อมูล/ที่อยู่', 'โรงสียังไม่สะดวก', 'อื่นๆ'];
-    const CANCELLABLE_ORDER_STATUSES = new Set(['pending', 'accepted', 'pending_payment', 'payment_review', 'paid', 'preparing']);
+    const CANCELLABLE_ORDER_STATUSES = new Set(['pending', 'accepted', 'pending_payment', 'payment_review', 'paid', 'preparing', 'awaiting_pickup']);
     const CANCELLABLE_MILLING_STATUSES = new Set(['pending_review', 'accepted', 'awaiting_pickup']);
 
     let currentResource = null;
@@ -688,7 +689,7 @@
       const rawMessage = String(item.message || '').trim();
       const fallbackDescription = getStatusDescription(type, item.status);
       const description = escapeHtml(!rawMessage || rawMessage === title ? fallbackDescription : rawMessage);
-      const active = index === 0 || tone === 'active';
+      const active = Boolean(item.isLatest);
       const cardClasses = active
         ? 'status-card status-pill--active rounded-[1.5rem] border border-green-200/80 px-4 py-4 sm:px-5 sm:py-5'
         : 'status-card status-pill--muted rounded-[1.5rem] border px-4 py-4 sm:px-5 sm:py-5';
@@ -856,7 +857,7 @@
         shell.classList.remove('hidden');
         empty.classList.add('hidden');
 
-        const displayedItems = items.map((item) => {
+        const displayedItems = items.map((item, index) => {
           const short = formatShortDateTime(item.created_at);
 
           return {
@@ -864,6 +865,7 @@
             label: statusLabel(type, item.status),
             day: short.day,
             time: short.time,
+            isLatest: index === items.length - 1,
           };
         });
 

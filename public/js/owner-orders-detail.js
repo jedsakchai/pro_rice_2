@@ -59,6 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
     payment_review: 'รอตรวจสอบการชำระเงิน',
     paid: 'ชำระเงินแล้ว',
     preparing: 'กำลังเตรียมสินค้า',
+    awaiting_pickup: 'รอลูกค้ามารับสินค้า',
     ready_to_ship: 'พร้อมจัดส่ง',
     shipping: 'จัดส่งแล้ว',
     completed: 'สำเร็จ',

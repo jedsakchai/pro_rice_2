@@ -37,6 +37,37 @@ function dedupeLatestByThread(rows) {
   return list;
 }
 
+const PICKUP_ORDER_VISIBLE_STATUSES = new Set(['pending', 'accepted', 'preparing', 'awaiting_pickup', 'completed', 'cancelled']);
+const PICKUP_ORDER_HIDDEN_STATUSES = new Set(['pending_payment', 'payment_review', 'paid', 'ready_to_ship', 'shipping']);
+
+function isVisibleNotificationRow(row) {
+  if (!row) return false;
+
+  const type = String(row.type || '').trim();
+  if (type !== 'order') return true;
+
+  const shippingMethod = String(row.shipping_method || '').trim();
+  if (shippingMethod !== 'pickup') return true;
+
+  return PICKUP_ORDER_VISIBLE_STATUSES.has(String(row.status || '').trim())
+    || ['pending_cancel', 'approved_cancel', 'rejected_cancel'].includes(String(row.status || '').trim());
+}
+
+function selectLatestVisibleThreads(rows) {
+  const seen = new Set();
+  const list = [];
+
+  for (const row of rows || []) {
+    const key = threadKey(row.type, row.resource_id);
+    if (seen.has(key)) continue;
+    if (!isVisibleNotificationRow(row)) continue;
+    seen.add(key);
+    list.push(row);
+  }
+
+  return list;
+}
+
 const CANCELLATION_STATUS_LABELS = {
   pending_cancel: 'รอยืนยันการยกเลิก',
   approved_cancel: 'ยกเลิกสำเร็จแล้ว',
@@ -61,6 +92,7 @@ function getCancellationResourceStatusLabel(type, status) {
       payment_review: 'รอตรวจสอบการชำระเงิน',
       paid: 'ชำระเงินแล้ว',
       preparing: 'กำลังเตรียมสินค้า',
+      awaiting_pickup: 'รอลูกค้ามารับสินค้า',
       ready_to_ship: 'พร้อมจัดส่ง',
       shipping: 'จัดส่งแล้ว',
       completed: 'สำเร็จ',
@@ -89,7 +121,7 @@ const CANCELLATION_CONFIG = {
     idColumn: 'order_id',
     ownerColumn: 'villager_id',
     millColumn: 'mill_id',
-    cancelableStatuses: new Set(['pending', 'accepted', 'pending_payment', 'payment_review', 'paid', 'preparing']),
+    cancelableStatuses: new Set(['pending', 'accepted', 'pending_payment', 'payment_review', 'paid', 'preparing', 'awaiting_pickup']),
     typeLabel: 'คำสั่งซื้อ',
   },
   milling: {
@@ -163,8 +195,9 @@ async function loadCancellationResource(conn, type, resourceId) {
   const config = CANCELLATION_CONFIG[type];
   if (!config) return null;
 
+  const extraFields = type === 'order' ? ', shipping_method' : '';
   const [rows] = await conn.query(
-    `SELECT ${config.idColumn} AS resource_id, ${config.ownerColumn} AS owner_id, ${config.millColumn} AS mill_id, status, cancel_reason, cancelled_at
+    `SELECT ${config.idColumn} AS resource_id, ${config.ownerColumn} AS owner_id, ${config.millColumn} AS mill_id${extraFields}, status, cancel_reason, cancelled_at
      FROM ${config.table}
      WHERE ${config.idColumn} = ?
      LIMIT 1`,
@@ -429,14 +462,15 @@ router.get('/count', async (req, res) => {
     // Prefer unread latest thread items from notifications table when available
     try {
       const [notificationRows] = await pool.query(
-        `SELECT notification_id, villager_id, type, resource_id, status, message, is_read, created_at
-         FROM notifications
-         WHERE villager_id = ?
-         ORDER BY created_at DESC, notification_id DESC
+        `SELECT n.notification_id, n.villager_id, n.type, n.resource_id, n.status, n.message, n.is_read, n.created_at, o.shipping_method
+         FROM notifications n
+         LEFT JOIN orders o ON o.order_id = n.resource_id AND n.type = 'order'
+         WHERE n.villager_id = ?
+         ORDER BY n.created_at DESC, n.notification_id DESC
          LIMIT 500`,
         [villager_id]
       );
-      const unread = dedupeLatestByThread(notificationRows)
+      const unread = selectLatestVisibleThreads(notificationRows)
         .filter((row) => !Number(row.is_read))
         .length;
       return res.json({
@@ -496,17 +530,18 @@ router.get('/items', async (req, res) => {
     // Prefer persistent notifications table if available, return the latest item for each thread.
     try {
       const [notes] = await pool.query(
-        `SELECT notification_id, villager_id, type, resource_id, status, message, is_read, created_at
-         FROM notifications
-          WHERE villager_id = ?
-         ORDER BY created_at DESC, notification_id DESC
+        `SELECT n.notification_id, n.villager_id, n.type, n.resource_id, n.status, n.message, n.is_read, n.created_at, o.shipping_method
+         FROM notifications n
+         LEFT JOIN orders o ON o.order_id = n.resource_id AND n.type = 'order'
+          WHERE n.villager_id = ?
+         ORDER BY n.created_at DESC, n.notification_id DESC
          LIMIT 200`,
         [villager_id]
       );
 
       // Return only the latest notification for each type/resource thread.
       const mapped = [];
-      const latestRows = dedupeLatestByThread(Array.isArray(notes) ? notes : []);
+      const latestRows = selectLatestVisibleThreads(Array.isArray(notes) ? notes : []);
 
       for (const row of latestRows) {
         let message = row.message;
@@ -525,6 +560,7 @@ router.get('/items', async (req, res) => {
           message,
           is_read: !!row.is_read,
           created_at: row.created_at,
+          shipping_method: row.shipping_method || null,
         });
       }
       return res.json({ success: true, data: mapped });
@@ -772,14 +808,19 @@ router.get('/:type/:resourceId/timeline', async (req, res) => {
 
     const conn = await pool.getConnection();
     try {
+      const resource = await loadCancellationResource(conn, type, resourceId);
       const history = await loadStatusHistory(conn, { resourceType: type, resourceId });
-      if (history.length > 0) {
+      const visibleHistory = type === 'order' && String(resource?.shipping_method || '').trim() === 'pickup'
+        ? history.filter((row) => PICKUP_ORDER_VISIBLE_STATUSES.has(String(row.to_status || '').trim()))
+        : history;
+
+      if (visibleHistory.length > 0) {
         return res.json({
           success: true,
           data: {
             type,
             resource_id: resourceId,
-            items: history.map((row) => ({
+            items: visibleHistory.map((row) => ({
               history_id: row.history_id,
               type,
               resource_id: Number(row.resource_id),
@@ -791,8 +832,6 @@ router.get('/:type/:resourceId/timeline', async (req, res) => {
           }
         });
       }
-
-      const resource = await loadCancellationResource(conn, type, resourceId);
 
       const [rows] = await conn.query(
         `SELECT notification_id, type, resource_id, status, message, is_read, created_at
@@ -827,12 +866,17 @@ router.get('/:type/:resourceId/timeline', async (req, res) => {
         const preCancelStatus = String(cancelRequest?.resource_status || '').trim();
         if (preCancelStatus) {
           const fallbackAt = cancelRequest.updated_at || cancelRequest.created_at || resource.updated_at || resource.created_at || new Date().toISOString();
-          return res.json({
-            success: true,
-            data: {
-              type,
-              resource_id: resourceId,
-              items: [
+          const items = type === 'order' && String(resource?.shipping_method || '').trim() === 'pickup'
+            ? [preCancelStatus, 'cancelled'].filter((status) => PICKUP_ORDER_VISIBLE_STATUSES.has(status) || status === 'cancelled').map((status, index) => ({
+                notification_id: null,
+                type,
+                resource_id: resourceId,
+                status,
+                message: getCancellationResourceStatusLabel(type, status),
+                is_read: true,
+                created_at: index === 0 ? (resource.created_at || fallbackAt) : fallbackAt,
+              }))
+            : [
                 {
                   notification_id: null,
                   type,
@@ -851,7 +895,13 @@ router.get('/:type/:resourceId/timeline', async (req, res) => {
                   is_read: true,
                   created_at: fallbackAt,
                 }
-              ]
+              ];
+          return res.json({
+            success: true,
+            data: {
+              type,
+              resource_id: resourceId,
+              items,
             }
           });
         }

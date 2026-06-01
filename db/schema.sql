@@ -44,7 +44,7 @@ CREATE TABLE IF NOT EXISTS orders (
   cancel_reason TEXT NULL,
   cancelled_at TIMESTAMP NULL,
   total DECIMAL(12,2) NOT NULL,
-  status ENUM('pending','accepted','pending_payment','payment_review','paid','preparing','ready_to_ship','shipping','completed','cancelled') DEFAULT 'pending',
+  status ENUM('pending','accepted','pending_payment','payment_review','paid','preparing','awaiting_pickup','ready_to_ship','shipping','completed','cancelled') DEFAULT 'pending',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   INDEX idx_orders_mill_id (mill_id),

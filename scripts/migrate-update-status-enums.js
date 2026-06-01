@@ -18,6 +18,7 @@ async function main() {
       'payment_review',
       'paid',
       'ready_to_ship',
+      'awaiting_pickup',
       'shipping',
     ];
     const millingLegacyAndNew = [
@@ -90,7 +91,7 @@ async function main() {
 
     await conn.execute(`
       ALTER TABLE orders
-      MODIFY status ENUM('pending','accepted','pending_payment','payment_review','paid','preparing','ready_to_ship','shipping','completed','cancelled') NOT NULL DEFAULT 'pending'
+      MODIFY status ENUM('pending','accepted','pending_payment','payment_review','paid','preparing','awaiting_pickup','ready_to_ship','shipping','completed','cancelled') NOT NULL DEFAULT 'pending'
     `);
 
     await conn.execute(`

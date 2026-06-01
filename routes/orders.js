@@ -60,7 +60,7 @@ function normalizeStatus(value) {
     shipped: 'shipping',
   };
   const canonical = aliases[status] || status;
-  const allowed = new Set(['pending', 'accepted', 'pending_payment', 'payment_review', 'paid', 'preparing', 'ready_to_ship', 'shipping', 'completed', 'cancelled']);
+  const allowed = new Set(['pending', 'accepted', 'pending_payment', 'payment_review', 'paid', 'preparing', 'awaiting_pickup', 'ready_to_ship', 'shipping', 'completed', 'cancelled']);
   return allowed.has(canonical) ? canonical : 'pending';
 }
 
