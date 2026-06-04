@@ -232,14 +232,16 @@ async function handleGeneral(user, text) {
 
   if (intent.intent === 'check_booking') {
     const bookingNumber = text.match(/RM\d{12}/i)?.[0] || '';
-    const booking = await getBooking({ bookingNumber, lineUserId: user.line_user_id });
+    const bookings = await getBooking({ bookingNumber, lineUserId: user.line_user_id });
+    const booking = Array.isArray(bookings) ? bookings[0] : bookings;
     if (!booking) return [buildText('ไม่พบข้อมูลคิว กรุณาส่งเลขที่จอง RM202606040001')];
     return [buildText(buildBookingSummaryText(booking))];
   }
 
   if (intent.intent === 'cancel_booking') {
     const bookingNumber = text.match(/RM\d{12}/i)?.[0] || '';
-    const booking = await getBooking({ bookingNumber, lineUserId: user.line_user_id });
+    const bookings = await getBooking({ bookingNumber, lineUserId: user.line_user_id });
+    const booking = Array.isArray(bookings) ? bookings[0] : bookings;
     if (!booking) return [buildText('ไม่พบคิวที่ต้องการยกเลิก กรุณาส่งเลขที่จอง RM202606040001')];
     await cancelBooking({ bookingNumber: booking.booking_number, lineUserId: user.line_user_id, reason: 'ยกเลิกผ่าน LINE' });
     await clearFlowState(user.line_user_id);
