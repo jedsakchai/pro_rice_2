@@ -11,6 +11,7 @@ const productsRoutes = require('./routes/products');
 const ownerProductsRoutes = require('./routes/owner-products');
 const ordersRoutes = require('./routes/orders');
 const notificationsRoutes = require('./routes/notifications');
+const lineWebhookRoutes = require('./routes/lineWebhook');
 
 const app = express();
 const PORT = Number(process.env.RICE_PORT || process.env.PORT || 3000);
@@ -119,7 +120,12 @@ process.on('uncaughtException', (err) => {
   console.error('UncaughtException:', err);
 });
 
-app.use(express.json({ limit: '2mb' }));
+app.use(express.json({
+  limit: '2mb',
+  verify: (req, res, buf) => {
+    req.rawBody = Buffer.from(buf);
+  },
+}));
 app.use(express.urlencoded({ extended: true }));
 
 // Static site (HTML/CSS/JS will be served with correct Content-Type by Express)
@@ -165,6 +171,7 @@ app.use('/api/products', productsRoutes);
 app.use('/api/owner/products', ownerProductsRoutes);
 app.use('/api/orders', ordersRoutes);
 app.use('/api/notifications', notificationsRoutes);
+app.use('/webhook/line', lineWebhookRoutes);
 
 // Serve uploaded files
 app.use('/uploads', express.static(path.join(__dirname, 'public', 'uploads')));

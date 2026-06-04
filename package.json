@@ -1,11 +1,12 @@
 {
-  "name": "rice-mill-website",
+  "name": "rice-mill-chatbot",
   "version": "1.0.0",
-  "description": "Multi-page rice mill website (frontend + backend)",
+  "description": "Rice mill website plus LINE Chatbot AI and MCP tools",
   "main": "app.js",
   "scripts": {
     "dev": "nodemon app.js",
     "start": "node app.js",
+    "mcp": "node mcp/mcpServer.js",
     "tunnel": "node scripts/start-with-ngrok.js",
     "dev:tunnel": "node scripts/start-with-ngrok.js",
     "db:setup": "node scripts/setup-db.js",
@@ -19,12 +20,7 @@
     "build:css": "tailwindcss -i ./public/css/input.css -o ./public/css/output.css",
     "watch:css": "tailwindcss -i ./public/css/input.css -o ./public/css/output.css --watch"
   },
-  "keywords": [
-    "rice",
-    "mill",
-    "milling",
-    "website"
-  ],
+  "keywords": ["rice", "mill", "milling", "website", "line", "chatbot", "mcp"],
   "author": "",
   "license": "MIT",
   "dependencies": {

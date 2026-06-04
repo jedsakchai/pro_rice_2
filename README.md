@@ -1,6 +1,6 @@
 # Community Rice Mill Website
 
-Multi-page rice mill website built with HTML, CSS (Tailwind), and JavaScript, with an Express + MySQL backend.
+Multi-page rice mill website built with HTML, CSS (Tailwind), and JavaScript, with an Express + MySQL backend. This repository also includes a LINE Chatbot AI, booking and ordering flows, and an MCP server for tool integration.
 
 ## Features
 
@@ -11,23 +11,32 @@ Multi-page rice mill website built with HTML, CSS (Tailwind), and JavaScript, wi
 - **Responsive Design**: Works great on mobile (360px+), tablet, and desktop
 - **Accessibility**: ARIA labels, keyboard navigation, focus states
 - **Mobile Menu**: Sticky header with collapsible mobile navigation
+- **LINE Chatbot AI**: Webhook, signature verification, bookings, orders, product list, and intent routing
+- **MCP Server**: Tools for `create_booking`, `get_booking`, `cancel_booking`, `create_order`, and `get_products`
 
 ## Tech Stack
 
 - Frontend: HTML5 + Tailwind CSS + Vanilla JavaScript
 - Backend: Node.js (Express) + MySQL (MAMP)
+- Integration: LINE Messaging API, optional OpenAI-compatible model, MCP stdio server
 - Tooling: PostCSS + Tailwind CLI
 
 ## Project Structure
 
 ```
-rice_2/
+rice-mill-chatbot/
 ├── public/                  # Static site (open/serve this)
 │   ├── *.html
 │   ├── css/
 │   └── js/
 ├── locales/
 ├── package.json
+├── schema.sql
+├── database/
+├── controllers/
+├── services/
+├── flex/
+├── mcp/
 ├── tailwind.config.js
 ├── postcss.config.js
 └── README.md
@@ -65,7 +74,11 @@ rice_2/
   copy .env.example .env
   ```
 
+  The default schema name used by this project is `rice_mill_db`.
+
 3. Create the database schema by running `db/schema.sql` in your MySQL client (phpMyAdmin / Workbench).
+
+For the LINE chatbot, you can also run the root `schema.sql` file. It creates the `users`, `products`, `bookings`, and `orders` tables used by the chatbot flows.
 
 4. Start the backend (also serves the frontend from `public/`):
   ```bash
@@ -73,6 +86,39 @@ rice_2/
   ```
 
 5. Open `http://localhost:3000` in your browser
+
+## LINE Chatbot Setup
+
+1. Copy `.env.example` to `.env` and fill in `LINE_CHANNEL_ACCESS_TOKEN` and `LINE_CHANNEL_SECRET`.
+2. Set your LINE webhook URL to `https://<your-domain>/webhook/line`.
+3. Start the app with `npm run dev`.
+4. Use ngrok if you are testing locally.
+
+The bot can handle these intents:
+
+- จองสีข้าว
+- ตรวจสอบคิว
+- ยกเลิกคิว
+- สั่งซื้อสินค้า
+- ดูรายการสินค้า
+- ติดต่อโรงสี
+- สอบถามทั่วไป
+
+## MCP Server
+
+Run the MCP server locally with:
+
+```bash
+npm run mcp
+```
+
+Available tools:
+
+- `create_booking`
+- `get_booking`
+- `cancel_booking`
+- `create_order`
+- `get_products`
 
 ## Expose the site with ngrok
 
