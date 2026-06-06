@@ -23,9 +23,15 @@ function buildBookingConfirmationFlex(data = {}) {
           { type: 'text', text: `ชื่อ : ${data.name || data.customer_name || '-'}`, wrap: true, size: 'sm' },
           { type: 'text', text: `เบอร์โทร : ${data.phone || '-'}`, wrap: true, size: 'sm' },
           { type: 'text', text: `ประเภทข้าว : ${data.riceType || data.rice_type || '-'}`, wrap: true, size: 'sm' },
+          { type: 'text', text: `โรงสี : ${data.riceMill || '-'}`, wrap: true, size: 'sm' },
           { type: 'text', text: `จำนวน : ${data.quantityKg || data.quantity_kg || '-'}`, wrap: true, size: 'sm' },
           { type: 'text', text: `วันที่ : ${data.desiredDate || data.desired_date || '-'}`, wrap: true, size: 'sm' },
           { type: 'text', text: `เวลา : ${data.dropoffTime || data.dropoff_time || '-'}`, wrap: true, size: 'sm' },
+
+
+
+
+
         ],
       },
       footer: {
@@ -67,9 +73,14 @@ function buildBookingSuccessFlex(booking = {}) {
         contents: [
           { type: 'text', text: `ชื่อ : ${booking.customer_name || booking.customerName || '-'}`, wrap: true, size: 'sm' },
           { type: 'text', text: `ประเภทข้าว : ${booking.rice_type || booking.riceType || '-'}`, wrap: true, size: 'sm' },
+          { type: 'text', text: `โรงสี : ${booking.riceMill || '-'}`, wrap: true, size: 'sm' },
           { type: 'text', text: `จำนวน : ${booking.quantity_kg || booking.quantityKg || '-'}`, wrap: true, size: 'sm' },
           { type: 'text', text: `วันที่ : ${booking.desired_date || booking.desiredDate || '-'}`, wrap: true, size: 'sm' },
           { type: 'text', text: `เวลา : ${booking.dropoff_time || booking.dropoffTime || '-'}`, wrap: true, size: 'sm' },
+
+
+
+
         ],
       },
     },
